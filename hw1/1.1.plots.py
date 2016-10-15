@@ -1,5 +1,5 @@
 from matplotlib import pyplot as plt
-f = open('out.txt', 'r')
+f = open('1.1.out.txt', 'r')
 errors = []
 times = []
 nps = []
@@ -20,4 +20,4 @@ plt.subplot(2, 1, 2)
 plt.plot(nps, errors)
 plt.ylabel('Absolute error')
 plt.xlabel('np')
-plt.show()
+plt.savefig('1.1.png')
