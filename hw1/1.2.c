@@ -17,7 +17,7 @@ double exact(double n) {
 }
 int main(int argc, char** argv) {
 	double n, ex, st, diff, percent;
-	for (n = 1; n <= 150; n++) {
+	for (n = 1; n <= 100; n++) {
 		ex = exact(n);
 		st = sterling(n);
 		diff = st - ex;
