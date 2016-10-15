@@ -5,6 +5,6 @@ for np in 10 50 100 200; do
     endTime=`date +%s%N | cut -b1-13`
     totalTime="$endTime - $startTime"
     totalTime=`bc -l <<< $totalTime`
-    echo "$val $totalTime"
+    echo "$val $totalTime $np"
 done
 
