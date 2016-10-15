@@ -15,8 +15,6 @@ range=`bc -l <<< $range`
 h="$range / $NP"
 h=`bc -l <<< $h`
 total="0"
-# time in millis
-startTime=`date +%s%N | cut -b1-13`
 for i in `seq $NP`
 do
     Xstart="$Xmin + $h * ($i - 1)"
@@ -40,7 +38,3 @@ error=`bc -l <<< $error`
 error="if ($error > 0) { $error } else { -1 * $error }"
 error=`bc -l <<< $error`
 echo $error
-endTime=`date +%s%N | cut -b1-13`
-totalTime="$endTime - $startTime"
-totalTime=`bc -l <<< $totalTime`
-echo $totalTime
