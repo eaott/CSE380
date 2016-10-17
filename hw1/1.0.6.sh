@@ -26,6 +26,7 @@ if [ \( -z "$1" \) ]; then
     read VAL
     echo -n "Convert to Celcius (C) or Fahrenheit (F): "
     read CONVERT
+    CONVERT=`echo $CONVERT | awk '{ print toupper($1) }'`
     if [[ $CONVERT == "C" ]]; then
         celcius $VAL
     else
