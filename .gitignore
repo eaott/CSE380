@@ -2,4 +2,5 @@
 *.log
 *.aux
 *.synctex.gz
+*.tar.gz
 *.exe
