@@ -1,0 +1,24 @@
+Files for Exercise 1.0 can be found in:
+	1.0.1.sh
+	1.0.2.sh
+	1.0.3.sh
+	1.0.4.sh
+	1.0.5.sh
+	1.0.6.sh
+	1.0.7.sh
+Files for Exercise 1.1 are:
+	1.1.sh -- main bash script that computes the integral
+	1.1.get_data.sh -- computes integral error, time, and NP for the four cases
+	1.1.out.txt -- output from 1.1.get_data.sh
+	1.1.plots.py -- python script (matplotlib) to create the plots
+	1.1.png -- both plots in a single figure
+Files for Exercise 1.2 are:
+	1.2.c -- computes factorials and Sterling approximation for N
+	1.2.sh -- compiles 1.2.c, creates 1.2.exe, runs it and creates 1.2.out.txt
+	1.2.out.txt -- stores results as (exact, sterling, difference, percent error)
+        1.2.predict.R -- models the error as a function of log(N) and outputs R^2 
+                         and expected N value where error is within 0.1%
+        1.2.predict.txt -- output from R analysis above, giving an estimate of
+                           NP = 82530
+	1.2.plots.py -- python script (matplotlib) to create plot (also include error versus n)
+	1.2.png -- both plots in a single figure
