@@ -3,14 +3,14 @@
 #include<math.h>
 double sterling(double n) {
 	double result = n * log(n) - n;
-	return result;
+	return exp(result);
 }
 double exact(double n) {
 	if (n <= 1)
-		return 0;
-	double result = 0;
+		return 1;
+	double result = 1;
 	while (n > 1) {
-		result += log(n);
+		result *= n;
 		n--;
 	}
 	return result;
