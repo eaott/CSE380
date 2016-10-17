@@ -1,29 +1,26 @@
 #!/bin/bash
-
+function triangle() {
+    for i in `seq $1`
+    do  
+        val="."
+        if $2 ; then
+            val="$i"
+        fi
+        skip=`expr $n \- $i`
+        for j in `seq $skip`
+        do
+          echo -ne " "
+        done
+        stop="$i - 1"
+        stop=`bc -l <<< $stop`
+        for j in `seq $stop`
+        do
+            echo -ne "$val "
+        done
+        echo -ne "$val"
+        echo
+    done
+}
 n=5
-for i in `seq $n`
-do
-    skip=`expr $n \- $i`
-    for j in `seq $skip`
-    do
-        echo -ne " "
-    done
-    for j in `seq $i`
-    do
-        echo -ne "$i "
-    done
-    echo
-done
-for i in `seq $n`
-do
-    skip=`expr $n \- $i`
-    for j in `seq $skip`
-    do
-        echo -ne " "
-    done
-    for j in `seq $i`
-    do
-        echo -ne ". "
-    done
-    echo
-done
+triangle $n true
+triangle $n false
