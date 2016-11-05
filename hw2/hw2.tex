@@ -65,20 +65,40 @@ rulesepcolor=\color{black},
 \begin{document}
 \maketitle
 
-From within \texttt{gsl-1.16/}:
 \begin{verbatim}
+> tar -xf gsl-1.16.tar.gz 
+> cd gsl-1.16
 > mkdir builds
 > cd builds
 > mkdir gcc0 gcc3 icc0 icc3
 > cd gcc0
 > module unload intel
 > module load gcc
-> ../../configure CC=gcc CLFAGS=-O0
+> ../../configure CC=gcc CFLAGS=-O0
 > time make -j1 > serial.txt
 > make clean
 > time make -j16 > parallel.txt
-> touch check_results.txt
-> (tail -f check_results.txt &); make check -k > check_results.txt
+> make check -k > check_results.txt
+> cd ../gcc3
+> ../../configure CC=gcc CFLAGS=-O3
+> time make -j1 > serial.txt
+> make clean
+> time make -j16 > parallel.txt
+> make check -k > check_results.txt
+> cd ../icc0
+> module unload gcc
+> module load intel
+> ../../configure CC=icc CFLAGS=-O0
+> time make -j1 > serial.txt
+> make clean
+> time make -j16 > parallel.txt
+> make check -k > check_results.txt
+> cd ../icc3
+> ../../configure CC=icc CFLAGS=-O3
+> time make -j1 > serial.txt
+> make clean
+> time make -j16 > parallel.txt
+> make check -k > check_results.txt
 \end{verbatim}
 
 
