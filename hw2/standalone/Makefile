@@ -1,8 +1,13 @@
 .PHONY: clean
 
-all: mytools.c main.c mytools.h
-	gcc -I$TACC_GSL_INC main.c mytools.c -lgsl -lgslcblas -L$TACC_GSL_LIB -o tardis
+EXEC=tardis
+CC=gcc
+CFLAGS=-O0
 
+all: mytools.c main.c mytools.h
+	@echo $(EXEC)
+	touch dumb.o
+	@echo $(TACC_GSL_INC)
+	$(CC) -I$(TACC_GSL_INC) main.c mytools.c -lgsl -lgslcblas -L$(TACC_GSL_LIB) -o $(EXEC)
 clean:
-	rm *.o
-	rm tardis
+	rm -f *.o tardis
