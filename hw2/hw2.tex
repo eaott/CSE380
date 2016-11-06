@@ -12,6 +12,8 @@
 \usepackage{amssymb}
 \usepackage{siunitx}
 \usepackage{mathtools}
+\usepackage{multirow}
+
 
 \usepackage[authoryear,round]{natbib}
 
@@ -66,40 +68,86 @@ rulesepcolor=\color{black},
 \maketitle
 
 \begin{verbatim}
-> tar -xf gsl-1.16.tar.gz 
-> cd gsl-1.16
-> mkdir builds
-> cd builds
-> mkdir gcc0 gcc3 icc0 icc3
-> cd gcc0
-> module unload intel
-> module load gcc
-> ../../configure CC=gcc CFLAGS=-O0
-> time make -j1 > serial.txt
-> make clean
-> time make -j16 > parallel.txt
-> make check -k > check_results.txt
-> cd ../gcc3
-> ../../configure CC=gcc CFLAGS=-O3
-> time make -j1 > serial.txt
-> make clean
-> time make -j16 > parallel.txt
-> make check -k > check_results.txt
-> cd ../icc0
-> module unload gcc
-> module load intel
-> ../../configure CC=icc CFLAGS=-O0
-> time make -j1 > serial.txt
-> make clean
-> time make -j16 > parallel.txt
-> make check -k > check_results.txt
-> cd ../icc3
-> ../../configure CC=icc CFLAGS=-O3
-> time make -j1 > serial.txt
-> make clean
-> time make -j16 > parallel.txt
-> make check -k > check_results.txt
+tar -xf gsl-1.16.tar.gz 
+cd gsl-1.16
+mkdir builds
+cd builds
+mkdir gcc0 gcc3 icc0 icc3
+
+cd gcc0
+module unload intel
+module load gcc
+../../configure CC=gcc CFLAGS=-O0
+(time make -j1) 2> serial.txt
+make clean
+../../configure CC=gcc CFLAGS=-O0
+(time make -j16) 2> parallel.txt
+make check -k 2>&1 | tee check_results.txt
+
+cd ../gcc3
+../../configure CC=gcc CFLAGS=-O3
+(time make -j1) 2> serial.txt
+make clean
+(time make -j16) 2> parallel.txt
+make check -k 2>&1 | tee check_results.txt
+
+cd ../icc0
+module unload gcc
+module load intel
+../../configure CC=icc CFLAGS=-O0
+(time make -j1) 2> serial.txt
+make clean
+(time make -j16) 2> parallel.txt
+make check -k 2>&1 | tee check_results.txt
+
+cd ../icc3
+../../configure CC=icc CFLAGS=-O3
+(time make -j1) 2> serial.txt
+make clean
+(time make -j16) 2> parallel.txt
+make check -k 2>&1 | tee check_results.txt
 \end{verbatim}
+
+I found the results for the table by using \texttt{cat} on the \texttt{serial.txt} and \texttt{parallel.txt} files and using
+a one-liner for pass/fail:
+\begin{verbatim}
+grep "# PASS: " check_results.txt | \
+awk '{print substr($0, 10)}' | awk '{ sum += $1 } END { print sum }'
+\end{verbatim}
+
+
+\begin{table}[h]
+\centering
+\begin{tabular}{r||c|c|c|c|}
+\hline
+\multirow{ 2}{*}{\textbf{Configuration}} & \multicolumn{2}{c|}{Compilation Times} & \multicolumn{2}{c|}{Regression Tests}\\
+ & Serial (secs) & Parallel (secs) & Passes& Failures\\
+\hline
+gcc/noOpts & 145.767 & 35.637 & 48 & 0\\ \hline
+gcc/O3 & 221.200 & 54.408 & 48 & 0\\ \hline
+icc/noOpt & 334.042 & 60.797 & 48 & 0\\ \hline
+icc/O3 & 450.186 & 90.841 & 44& 4\\ \hline
+\end{tabular}
+\end{table}
+
+It was faster to build optimized GNU rather than optimized Intel, by around a factor of 2: (2.04 for serial, 1.67 for parallel).
+
+Non-optimized GNU was 4.09x faster to compile in parallel than in serial.
+
+The only regression failures occured using the Intel compiler using \texttt{-O3}, which isn't surprising given
+the ``magic'' that Intel does at that level of optimization. 
+I ran
+\begin{verbatim}
+grep -A4 "# FAIL:  1" icc3.check_results.txt | grep "See " | awk '{print substr($0, 5)}'
+\end{verbatim}
+to identify the directories where failures occured (in this case, I got lucky because each time there were any failures in
+a directory, there was exactly one failure, so I used \texttt{grep} for exactly that condition then looked a few lines down to find the directory. In this case, the failing directories were (including a note from the GSL documentation):
+\begin{itemize}
+\item \texttt{linalg} -- ``functions for solving linear systems''
+\item \texttt{specfunc} -- ``GSL special function library'' for families of functions like Bessel, elliptic integrals, etc.
+\item \texttt{poly} -- ``functions for evaluating and solving polynomials''
+\item \texttt{ode-initval2} -- ``functions for solving ordinary differential equation (ODE) initial value problems''
+\end{itemize}
 
 
 %\bibliographystyle{plainnat}
