@@ -1,12 +1,17 @@
 .PHONY: clean
 
-EXEC=tardis
-CC=gcc
-CFLAGS=
-GSL_INC=$(TACC_GSL_INC)
-GSL_LIB=$(TACC_GSL_LIB)
+EXEC:=tardis
+CC:=gcc
+CFLAGS=$$CFLAGS
+GSL_INC:=$$TACC_GSL_INC
+GSL_LIB:=$$TACC_GSL_LIB
 
-all: mytools.c main.c mytools.h
-	$(CC) $(CFLAGS) -I$(GSL_INC) main.c mytools.c -lgsl -lgslcblas -L$(GSL_LIB) -o $(EXEC)
+SRC := $(wildcard *.c)
+OBJ := $(patsubst %.c,%.o,$(SRC))
+
+$(EXEC): $(OBJ)
+	$(CC) $(CFLAGS) -I$(GSL_INC) -lgsl -lgslcblas -L$(GSL_LIB) -o $@ $^
+%.o: %.c
+	$(CC) $(CFLAGS) -I$(GSL_INC) -c $<
 clean:
 	rm -f *.o tardis
