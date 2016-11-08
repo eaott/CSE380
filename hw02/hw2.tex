@@ -80,7 +80,6 @@ module load gcc
 ../../configure CC=gcc CFLAGS=-O0
 (time make -j1) 2> serial.txt
 make clean
-../../configure CC=gcc CFLAGS=-O0
 (time make -j16) 2> parallel.txt
 make check -k 2>&1 | tee check_results.txt
 
@@ -130,11 +129,11 @@ icc/O3 & 450.186 & 90.841 & 44& 4\\ \hline
 \end{tabular}
 \end{table}
 
-It was faster to build optimized GNU rather than optimized Intel, by around a factor of 2: (2.04 for serial, 1.67 for parallel).
-
-Non-optimized GNU was 4.09x faster to compile in parallel than in serial.
-
-The only regression failures occured using the Intel compiler using \texttt{-O3}, which isn't surprising given
+Conclusions:
+\begin{itemize}
+\item It was faster to build optimized GNU rather than optimized Intel, by around a factor of 2: (2.04 for serial, 1.67 for parallel).
+\item Non-optimized GNU was 4.09x faster to compile in parallel than in serial.
+\item The only regression failures occured using the Intel compiler using \texttt{-O3}, which isn't surprising given
 the ``magic'' that Intel does at that level of optimization. 
 I ran
 \begin{verbatim}
@@ -148,15 +147,57 @@ a directory, there was exactly one failure, so I used \texttt{grep} for exactly 
 \item \texttt{poly} -- ``functions for evaluating and solving polynomials''
 \item \texttt{ode-initval2} -- ``functions for solving ordinary differential equation (ODE) initial value problems''
 \end{itemize}
-
+\end{itemize}
 
 \section{2.2}
 \begin{figure}[h]
 \begin{center}
 \includegraphics[scale=0.75]{ex2.2/2_2.png}
+\caption{Showing the semi-anticipated behavior that a polynomial fit will get increasingly bad for something that should have asymptotic behavior, whereas the exponential fit is extremely reasonable and in line with typical
+``chemistry curves.''}
 \end{center}
 \end{figure}
 
+
+\section{2.3}
+\begin{enumerate}[1.]
+\item Excluding today, how many days are there left in this month?
+\begin{verbatim}
+# bc -l <<< "`cal | tail -c4 | head -c2` - `date +%d`"
+23
+\end{verbatim}
+
+\item Here's a way to look at the average and spread of round-trip-time to \texttt{google.com}, formatted
+nicely.
+\begin{verbatim}
+# ping -i0.2 -c5 google.com | tail -n1 | cut -d"/" -f5,7 --output-delimiter=" +/- "
+6.236 +/- 0.147 ms
+\end{verbatim}
+
+\item Here's a way to find the PID and user for the top five processes (using your default sort order).
+\begin{verbatim}
+# top -n1 -b | grep -a5 "PID" | tail -n5 | sed -e 's/^[ \t]*//' | cut -d" " -f1-2
+18168 xchma
+18167 xchma
+27308 evanott
+27321 shawnlin
+25814 taslima
+\end{verbatim}
+
+\item Generate a random word from the built-in dictionary
+\begin{verbatim}
+# cat /usr/share/dict/words | sed "`shuf -i 1-\`cat /usr/share/dict/words | wc -l \` -n 1`q;d"
+hindbrain
+\end{verbatim}
+
+
+\item Finally, you find that your annoying co-worker leaves their workstation logged in, but unattended, then this is a reasonably fast way to make sure they don't do it again. NOTE: PLEASE do not actually run this command. Seriously. I ran it on my Mac and even after deleting the file (through the file manager, rather than command line -- big mistake), it kept writing, to the tune of a 90GB or so file. I had to reboot my machine to go back and delete it.
+\begin{verbatim}
+# (yes > ~/logout_next_time.txt &); clear
+\end{verbatim}
+No output. Alternatively, one can use something like \texttt{top} instead of \texttt{yes}. Again, don't actually
+run it unless you \emph{actually} want to foobar someone (or yourself).
+\end{enumerate}
 %\bibliographystyle{plainnat}
 %\bibliography{references_filename_without_extension}
 
