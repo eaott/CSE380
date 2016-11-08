@@ -1,0 +1,9 @@
+The structure of files is as follows:
+hw02/
+  hw2.pdf - write-up for 2.0, plots from 2.2 and one-liners for 2.3
+  ex2.1/Makefile - makefile for the "standalone" code
+  ex2.2/
+    Makefile - build the executables, run them, write output to files for use in plotting
+    ex2.2.exp.cpp - C++ file to do the exponential fit
+    ex2.2.poly.cpp - C++ file to do the polynomial fit
+    ex2.2.data.txt - the radius / energy data in a text format
