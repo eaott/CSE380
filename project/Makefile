@@ -19,7 +19,7 @@ clean:
 check: check_pr1 check_pr2
 
 check_pr1: rk4 test/pr2_rk4_test.cpp
-	g++ $(INCLUDES) -o bin/testpr2 bin/rk4.o test/pr2_rk4_test.cpp
+	g++ $(INCLUDES) -Itest -o bin/testpr2 test/main_test.cpp bin/rk4.o test/pr2_rk4_test.cpp
 	./bin/testpr2
 
 check_pr2:
