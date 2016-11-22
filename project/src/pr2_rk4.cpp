@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
-#include "Eigen/Dense"
+#include "rk4.h"
+
 using namespace std;
 using namespace Eigen;
 
@@ -15,7 +16,6 @@ double OMEGA = 5;
 #define idxUy 4
 #define idxUz 5
 
-
 VectorXd particleInField(double time, VectorXd y){
   VectorXd ret(y.size());
   ret(idxX) = y(idxUx);
@@ -25,16 +25,6 @@ VectorXd particleInField(double time, VectorXd y){
   ret(idxUy) = -OMEGA * y(idxUx) - TAU_INV * y(idxUy);
   ret(idxUz) = - TAU_INV * y(idxUz);
   return ret;
-}
-
-// We know that it's independent of time, but the code shouldn't
-// need to know that necessarily to have a nice interface.
-VectorXd rk4(double time, VectorXd initialState, double step, VectorXd (*f)(double, VectorXd)) {
-  VectorXd k1 = step * f(time, initialState);
-  VectorXd k2 = step * f(time + 0.5 * step, initialState + 0.5 * k1);
-  VectorXd k3 = step * f(time + 0.5 * step, initialState + 0.5 * k2);
-  VectorXd k4 = step * f(time + step, initialState + k3);
-  return initialState + 1.0/6.0 * (k1 + k2 * 2 + k3 * 2 + k4);
 }
 
 int main(int argc, char const *argv[]) {
