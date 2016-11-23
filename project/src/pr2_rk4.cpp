@@ -1,6 +1,6 @@
 #include <iostream>
 #include <fstream>
-#include "rk4.h"
+#include "rk4.hpp"
 
 using namespace std;
 using namespace Eigen;
