@@ -3,7 +3,7 @@
 #include <cmath>
 #include <iostream>
 #include "utils.hpp"
-#include "rk4_utils.hpp"
+#include "rk_utils.hpp"
 using namespace Eigen;
 
 void exponentialDecayRunner(VectorXd (*rk)(double, VectorXd, double, VectorXd (double, VectorXd))) {

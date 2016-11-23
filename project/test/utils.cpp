@@ -1,5 +1,5 @@
 #include "utils.hpp"
-#include "rk4_utils.hpp"
+#include "rk_utils.hpp"
 using namespace Eigen;
 
 bool equal(double a, double b, double threshold) {
