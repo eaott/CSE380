@@ -35,7 +35,8 @@ int main(int argc, char const *argv[]) {
     return 1;
   }
   int iter = reader.GetInteger("problem2", "iter", 10000);
-  std::cout << iter << std::endl;
+  double step = reader.GetReal("problem2", "step", 0.01);
+  std::cout << iter << " " << step << std::endl;
 
   // FIXME: examples of syntax...
   std::cout << "Config loaded from 'test.ini': version="
@@ -58,7 +59,7 @@ int main(int argc, char const *argv[]) {
   out << "x,y,z\n";
   out << state(0) << "," << state(1) << "," << state(2) << "\n";
   for (int i = 0; i < iter; i++) {
-     state = rk4(i * 0.01 - 0.01, state, 0.01, particleInField);
+     state = rk4(i * step, state, step, particleInField);
      out << state(0) << "," << state(1) << "," << state(2) << "\n";
    }
    out.close();

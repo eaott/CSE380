@@ -1,4 +1,7 @@
 #include "rk4.hpp"
+#include "H5Cpp.h"
+#include <gsl/gsl_matrix.h>
+#include <gsl/gsl_vector.h>
 using namespace Eigen;
 
 // We know that it's independent of time, but the code shouldn't
@@ -31,4 +34,9 @@ VectorXd rkf(double time, VectorXd initialState, double step, VectorXd (*f)(doub
   VectorXd k5 = step * f(time + step,
                          initialState + k1 * 439.0 / 216.0 - k2 * 8.0 + k3 * 3680.0 / 513.0 - k4 * 845.0 / 4104.0);
   return initialState + k1 * 25.0 / 216.0 + k3 * 1408.0 / 2565.0 + k4 * 2197.0 / 4104.0 - k5 / 5.0;
+}
+
+VectorXd forwardEuler(double time, VectorXd initialState, double step, VectorXd (*f)(double, VectorXd)) {
+  VectorXd k1 = step * f(time, initialState);
+  return initialState + k1;
 }
