@@ -57,7 +57,7 @@ int main(int argc, char const *argv[]) {
   out.open("test.csv");
   out << "x,y,z\n";
   out << state(0) << "," << state(1) << "," << state(2) << "\n";
-  for (int i = 0; i < 10000; i++) {
+  for (int i = 0; i < 10; i++) {
      state = rk4(i * 0.01 - 0.01, state, 0.01, particleInField);
      out << state(0) << "," << state(1) << "," << state(2) << "\n";
    }
