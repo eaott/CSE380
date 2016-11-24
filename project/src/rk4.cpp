@@ -1,7 +1,5 @@
 #include "rk4.hpp"
 #include "H5Cpp.h"
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_vector.h>
 using namespace Eigen;
 
 // We know that it's independent of time, but the code shouldn't

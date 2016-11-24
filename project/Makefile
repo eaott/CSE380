@@ -33,6 +33,7 @@ check-debug: TESTFLAGS += -s
 check-debug: check
 
 pr1:
+	$(COMPILE) -o bin/pr1 src/gsl_euler.cpp
 
 pr2: rk4 src/pr2_rk4.cpp
 	$(COMPILE) -o bin/pr2 bin/rk4.o src/pr2_rk4.cpp
