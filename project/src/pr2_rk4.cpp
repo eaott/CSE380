@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include "rk4.hpp"
+#include "INIReader.h"
 
 using namespace std;
 using namespace Eigen;
@@ -28,6 +29,23 @@ VectorXd particleInField(double time, VectorXd y){
 }
 
 int main(int argc, char const *argv[]) {
+  INIReader reader("test.ini");
+  if (reader.ParseError() < 0) {
+    std::cout << "Can't load test.ini\n" << std::endl;
+    return 1;
+  }
+  int iter = reader.GetInteger("problem2", "iter", 10000);
+  std::cout << iter << std::endl;
+
+  // FIXME: examples of syntax...
+  std::cout << "Config loaded from 'test.ini': version="
+           << reader.GetInteger("protocol", "version", -1) << ", name="
+           << reader.Get("user", "name", "UNKNOWN") << ", email="
+           << reader.Get("user", "email", "UNKNOWN") << ", pi="
+           << reader.GetReal("user", "pi", -1) << ", active="
+           << reader.GetBoolean("user", "active", true) << "\n";
+
+
   VectorXd state(6);
   state(idxX) = 0;
   state(idxY) = 0;
