@@ -27,21 +27,25 @@ int main(int argc, char const *argv[]) {
   double hstart = 1e-6;
   double epsilon_abs = 1e-6;
   double epsilon_rel = 0.0;
+  double t_end = 5.0;
+  double y[1] = {20.0};
 
   gsl_odeiv2_system sys = {func, jacobian, 1, NULL};
 
-  // FIXME replace the RK4 method with a fixed step size...
-  // for now, just see if it compiles and seems to work.
+  // FIXME this is the backward Euler so should be comparable,
+  // but might consider using a better step function -- maybe
+  // gsl_odeiv2_step_rk8pd? or the GSL version of Runge-Kutta-Fehlberg
+  // gsl_odeiv2_step_rkf45
   gsl_odeiv2_driver * d =
-    gsl_odeiv2_driver_alloc_y_new(&sys, gsl_odeiv2_step_rk4,
+    gsl_odeiv2_driver_alloc_y_new(&sys, gsl_odeiv2_step_rk1imp,
                                   hstart, epsilon_abs, epsilon_rel);
-  double t = 0.0, t_end = 10.0;
-  double y[1] = {20.0};
 
-  for (int i = 1; i <= 100; i++)
+  int nsteps = 1;
+
+  for (double t = 0.0; t < t_end; )
   {
-    double ti = i * t_end / 100.0;
-    int status = gsl_odeiv2_driver_apply (d, &t, ti, y);
+    // goes nsteps of size h
+    int status = gsl_odeiv2_driver_apply_fixed_step (d, &t, hstart, nsteps, y);
 
     if (status != GSL_SUCCESS)
   	{
@@ -49,7 +53,7 @@ int main(int argc, char const *argv[]) {
   	  break;
   	}
 
-    printf ("%d: %.5e %.5e\n", i, t, y[0]);
+    printf ("%.5e %.5e\n", t, y[0]);
   }
 
   gsl_odeiv2_driver_free (d);
