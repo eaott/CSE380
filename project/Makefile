@@ -18,15 +18,12 @@ endif
 
 COMPILE=$(CC) $(INCLUDES) $(CFLAGS)
 all: bin
-all: bin/pr1 bin/pr2 bin/h5test
+all: bin/pr1 bin/pr2
 
 bin:
 	mkdir $@
 
-bin/h5test: src/hdf5_wrapper.cpp
-	$(COMPILE) -o $@ src/hdf5_wrapper.cpp
-
-bin/pr1:
+bin/pr1: src/gsl_euler.cpp
 	$(COMPILE) -o $@ src/gsl_euler.cpp
 
 bin/pr2: bin/rk4.o src/pr2_rk4.cpp

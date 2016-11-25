@@ -5,6 +5,7 @@
 using std::cout;
 using std::endl;
 #include "H5Cpp.h"
+#include <ctime>
 
 using namespace H5;
 using namespace std;
@@ -20,6 +21,8 @@ double OMEGA = 5.0;
 #define idxUx 3
 #define idxUy 4
 #define idxUz 5
+
+
 
 VectorXd particleInField(double time, VectorXd y){
   VectorXd ret(y.size());
@@ -49,6 +52,38 @@ VectorXd analytical(double time) {
   return ret;
 }
 
+void writeAttrs(DataSet dataset, int iter, double step, string method, string time_str) {
+  DataSpace attr_dataspace = DataSpace(H5S_SCALAR);
+  StrType strdatatype(PredType::C_S1, 256);
+  Attribute attribute = dataset.createAttribute("Main data info", strdatatype, attr_dataspace);
+  attribute.write(strdatatype, "rows are in the order (x, y, z)");
+
+  Attribute iterAttr = dataset.createAttribute("iter", PredType::STD_I32BE, attr_dataspace);
+  iterAttr.write(PredType::NATIVE_INT, &iter);
+
+  Attribute stepAttr = dataset.createAttribute("step", PredType::IEEE_F32BE, attr_dataspace);
+  stepAttr.write(PredType::NATIVE_DOUBLE, &step);
+
+  Attribute methodAttr = dataset.createAttribute("method", strdatatype, attr_dataspace);
+  methodAttr.write(strdatatype, method);
+
+  Attribute timeAttr = dataset.createAttribute("timestamp", strdatatype, attr_dataspace);
+  timeAttr.write(strdatatype, time_str);
+}
+
+std::string getTime() {
+  time_t rawtime;
+  struct tm * timeinfo;
+  char buffer[80];
+
+  time (&rawtime);
+  timeinfo = localtime(&rawtime);
+
+  strftime(buffer,80,"%Y_%m_%d__%I_%M_%S",timeinfo);
+  std::string str(buffer);
+  return str;
+}
+
 int main(int argc, char const *argv[]) {
   INIReader reader("test.ini");
   if (reader.ParseError() < 0) {
@@ -57,7 +92,19 @@ int main(int argc, char const *argv[]) {
   }
   int iter = reader.GetInteger("problem2", "iter", 10000);
   double step = reader.GetReal("problem2", "step", 0.01);
+  string methodStr = reader.Get("problem2", "method", "rk4");
+  VectorXd (*rk)(double, VectorXd, double, VectorXd (double, VectorXd));
+
+  if (methodStr == "rk38") {
+    rk = rk38;
+  } else if (methodStr == "rkf") {
+    rk = rkf;
+  } else {
+    methodStr = "rk4";
+    rk = rk4;
+  }
   std::cout << iter << " " << step << std::endl;
+  std::string runTime = getTime();
 
   VectorXd state(6);
   state(idxX) = 0;
@@ -73,7 +120,7 @@ int main(int argc, char const *argv[]) {
   double data[3][iter];
   double analytical_data[3][iter];
   for (int i = 0; i < iter; i++) {
-    state = rkf(i * step, state, step, particleInField);
+    state = rk(i * step, state, step, particleInField);
     data[idxX][i] = state(idxX);
     data[idxY][i] = state(idxY);
     data[idxZ][i] = state(idxZ);
@@ -86,6 +133,7 @@ int main(int argc, char const *argv[]) {
 
   H5File * file = new H5File("file.h5", H5F_ACC_TRUNC);
 
+
   hsize_t dataset_dims[2];
   dataset_dims[0] = 3;
   dataset_dims[1] = iter;
@@ -95,26 +143,16 @@ int main(int argc, char const *argv[]) {
   ));
   dataset->write(data, PredType::NATIVE_DOUBLE);
 
-  DataSpace attr_dataspace = DataSpace(H5S_SCALAR);
-  StrType strdatatype(PredType::C_S1, 256);
-  Attribute attribute = dataset->createAttribute("Rows", strdatatype, attr_dataspace);
-  attribute.write(strdatatype, "rows are in the order (x, y, z)");
-
-  Attribute iterAttr = dataset->createAttribute("iter", PredType::STD_I32BE, attr_dataspace);
-  iterAttr.write(PredType::NATIVE_INT, &iter);
-
-  Attribute stepAttr = dataset->createAttribute("step", PredType::IEEE_F32BE, attr_dataspace);
-  stepAttr.write(PredType::NATIVE_DOUBLE, &step);
-
   DataSpace analytical_dataspace(2, dataset_dims);
   DataSet* analytical_dataset = new DataSet(file->createDataSet(
     "analytical", PredType::NATIVE_DOUBLE, analytical_dataspace
   ));
   analytical_dataset->write(analytical_data, PredType::NATIVE_DOUBLE);
 
-  Attribute analytical_attribute = analytical_dataset->createAttribute("Rows", strdatatype, attr_dataspace);
-  analytical_attribute.write(strdatatype, "rows are in the order (x, y, z)");
+  writeAttrs(*dataset, iter, step, methodStr, runTime);
+  writeAttrs(*analytical_dataset, iter, step, methodStr, runTime);
 
+  delete analytical_dataset;
   delete dataset;
   delete file;
   return 0;
