@@ -45,7 +45,7 @@ VectorXd analytical(double time) {
     (-20 * TAU * TAU * OMEGA + TAU * TAU * OMEGA * ret(idxUx) - TAU * ret(idxUy))
     /
     (1 + TAU * TAU * OMEGA * OMEGA);
-  ret(idxZ) = TAU * (2 - ret(idxZ));
+  ret(idxZ) = TAU * (2 - ret(idxUz));
   return ret;
 }
 
