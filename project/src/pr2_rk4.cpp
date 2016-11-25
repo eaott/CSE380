@@ -42,15 +42,6 @@ int main(int argc, char const *argv[]) {
   double step = reader.GetReal("problem2", "step", 0.01);
   std::cout << iter << " " << step << std::endl;
 
-  // FIXME: examples of syntax...
-  std::cout << "Config loaded from 'test.ini': version="
-           << reader.GetInteger("protocol", "version", -1) << ", name="
-           << reader.Get("user", "name", "UNKNOWN") << ", email="
-           << reader.Get("user", "email", "UNKNOWN") << ", pi="
-           << reader.GetReal("user", "pi", -1) << ", active="
-           << reader.GetBoolean("user", "active", true) << "\n";
-
-
   VectorXd state(6);
   state(idxX) = 0;
   state(idxY) = 0;
@@ -63,14 +54,12 @@ int main(int argc, char const *argv[]) {
   out << "x,y,z\n";
   out << state(0) << "," << state(1) << "," << state(2) << "\n";
 
-  VectorXd x(iter);
-  VectorXd y(iter);
-  VectorXd z(iter);
+  double data[3][iter];
   for (int i = 0; i < iter; i++) {
     state = rk4(i * step, state, step, particleInField);
-    x(i) = state(idxX);
-    y(i) = state(idxY);
-    z(i) = state(idxZ);
+    data[idxX][i] = state(idxX);
+    data[idxY][i] = state(idxY);
+    data[idxZ][i] = state(idxZ);
     out << state(0) << "," << state(1) << "," << state(2) << "\n";
   }
   out.close();
@@ -84,14 +73,12 @@ int main(int argc, char const *argv[]) {
   DataSet* dataset = new DataSet(file->createDataSet(
     "dataset", PredType::NATIVE_DOUBLE, dataspace
   ));
-
-  double data[3][iter];
-  for (int i = 0; i < iter; i++) {
-    data[0][i] = x(i);
-    data[1][i] = y(i);
-    data[2][i] = z(i);
-  }
   dataset->write(data, PredType::NATIVE_DOUBLE);
+
+  DataSpace attr_dataspace = DataSpace(H5S_SCALAR);
+  StrType strdatatype(PredType::C_S1, 256);
+  Attribute attribute = dataset->createAttribute("Rows", strdatatype, attr_dataspace);
+  attribute.write(strdatatype, "rows are in the order (x, y, z)");
 
   delete dataset;
   delete file;
