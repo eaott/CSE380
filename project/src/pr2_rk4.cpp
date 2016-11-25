@@ -99,6 +99,7 @@ int main(int argc, char const *argv[]) {
   StrType strdatatype(PredType::C_S1, 256);
   Attribute attribute = dataset->createAttribute("Rows", strdatatype, attr_dataspace);
   attribute.write(strdatatype, "rows are in the order (x, y, z)");
+  dataset->createAttribute("iter", PredType::STD_I32BE, attr_dataspace).write(PredType::STD_I32BE, iter);
 
   DataSpace analytical_dataspace(2, dataset_dims);
   DataSet* analytical_dataset = new DataSet(file->createDataSet(
