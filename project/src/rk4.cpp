@@ -1,5 +1,4 @@
 #include "rk4.hpp"
-#include "H5Cpp.h"
 using namespace Eigen;
 
 // We know that it's independent of time, but the code shouldn't

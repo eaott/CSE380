@@ -1,7 +1,7 @@
 INCLUDES:=-Ithird_party -Iincludes
 
 
-CFLAGS:= -lgsl -lgslcblas
+CFLAGS:= -lgsl -lgslcblas -lz -lm -lhdf5 -lhdf5_cpp
 TESTFLAGS:=
 host:=$(shell uname -s)
 ifeq ($(host),Darwin)
@@ -9,11 +9,11 @@ ifeq ($(host),Darwin)
 	HDF_INSTALL=/Users/Evan/hpc_codes/installed/hdf5-1.8.18
 	HDF5_LIB:=-L$(HDF_INSTALL)/lib
 	HDF5_INC:=-I$(HDF_INSTALL)/include
-	CFLAGS += $(HDF5_LIB) $(HDF5_INC) $(HDF_INSTALL)/lib/libhdf5.a -lz -lm -lhdf5 -lhdf5_cpp
+	CFLAGS += $(HDF5_LIB) $(HDF5_INC) $(HDF_INSTALL)/lib/libhdf5.a
 else
 	CC:=icpc
 	# FIXME look into this
-	CFLAGS += -I$$TACC_GSL_INC -L$$TACC_GSL_LIB
+	CFLAGS += -I$$TACC_GSL_INC -L$$TACC_GSL_LIB -I$$TACC_HDF5_INC -L$$TACC_HDF5_LIB -L$$TAC_HDF5_LIB/libhdf5.a
 endif
 
 COMPILE=$(CC) $(INCLUDES) $(CFLAGS)
