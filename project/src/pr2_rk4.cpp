@@ -38,7 +38,7 @@ VectorXd analytical(double time) {
   ret(idxUy) = -20 * exp(-time * TAU_INV) * sin(time * OMEGA);
   ret(idxUz) = 2 * exp(-time * TAU_INV);
   ret(idxX) =
-    (20 * TAU - TAU * ret(idxUx) + TAU * TAU * OMEGA * ret(idxUy))
+    (20 * TAU - TAU * ret(idxUx) - TAU * TAU * OMEGA * ret(idxUy))
     /
     (1 + TAU * TAU * OMEGA * OMEGA);
   ret(idxY) =
