@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 
-f = h5py.File("/Users/Evan/GitProjects/cse380/project/file.h5", "r")
+f = h5py.File("/Users/Evan/GitProjects/cse380/project/bigfile.h5", "r")
 
 dset = f['dataset']
 x = dset.value[0]

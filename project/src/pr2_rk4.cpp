@@ -10,9 +10,9 @@ using namespace H5;
 using namespace std;
 using namespace Eigen;
 
-double TAU = 5;
-double TAU_INV = 1 / TAU;
-double OMEGA = 5;
+double TAU = 5.0;
+double TAU_INV = 1.0 / TAU;
+double OMEGA = 5.0;
 
 #define idxX 0
 #define idxY 1
@@ -63,6 +63,7 @@ int main(int argc, char const *argv[]) {
   state(idxX) = 0;
   state(idxY) = 0;
   state(idxZ) = 0;
+
   state(idxUx) = 20;
   state(idxUy) = 0;
   state(idxUz) = 2;
@@ -72,7 +73,7 @@ int main(int argc, char const *argv[]) {
   double data[3][iter];
   double analytical_data[3][iter];
   for (int i = 0; i < iter; i++) {
-    state = rk4(i * step, state, step, particleInField);
+    state = rkf(i * step, state, step, particleInField);
     data[idxX][i] = state(idxX);
     data[idxY][i] = state(idxY);
     data[idxZ][i] = state(idxZ);
