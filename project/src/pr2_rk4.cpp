@@ -32,6 +32,23 @@ VectorXd particleInField(double time, VectorXd y){
   return ret;
 }
 
+VectorXd analytical(double time) {
+  VectorXd ret(6);
+  ret(idxUx) = 20 * exp(-time * TAU_INV) * cos(time * OMEGA);
+  ret(idxUy) = -20 * exp(-time * TAU_INV) * sin(time * OMEGA);
+  ret(idxUz) = 2 * exp(-time * TAU_INV);
+  ret(idxX) =
+    (20 * TAU - TAU * ret(idxUx) + TAU * TAU * OMEGA * ret(idxUy))
+    /
+    (1 + TAU * TAU * OMEGA * OMEGA);
+  ret(idxY) =
+    (-20 * TAU * TAU * OMEGA + TAU * TAU * OMEGA * ret(idxUx) - TAU * ret(idxUy))
+    /
+    (1 + TAU * TAU * OMEGA * OMEGA);
+  ret(idxZ) = TAU * (2 - ret(idxZ));
+  return ret;
+}
+
 int main(int argc, char const *argv[]) {
   INIReader reader("test.ini");
   if (reader.ParseError() < 0) {
@@ -49,20 +66,22 @@ int main(int argc, char const *argv[]) {
   state(idxUx) = 20;
   state(idxUy) = 0;
   state(idxUz) = 2;
-  ofstream out;
-  out.open("test.csv");
-  out << "x,y,z\n";
-  out << state(0) << "," << state(1) << "," << state(2) << "\n";
 
+
+  VectorXd analytical_value(6);
   double data[3][iter];
+  double analytical_data[3][iter];
   for (int i = 0; i < iter; i++) {
     state = rk4(i * step, state, step, particleInField);
     data[idxX][i] = state(idxX);
     data[idxY][i] = state(idxY);
     data[idxZ][i] = state(idxZ);
-    out << state(0) << "," << state(1) << "," << state(2) << "\n";
+
+    analytical_value = analytical((i + 1) * step);
+    analytical_data[idxX][i] = analytical_value(idxX);
+    analytical_data[idxY][i] = analytical_value(idxY);
+    analytical_data[idxZ][i] = analytical_value(idxZ);
   }
-  out.close();
 
   H5File * file = new H5File("file.h5", H5F_ACC_TRUNC);
 
@@ -79,6 +98,15 @@ int main(int argc, char const *argv[]) {
   StrType strdatatype(PredType::C_S1, 256);
   Attribute attribute = dataset->createAttribute("Rows", strdatatype, attr_dataspace);
   attribute.write(strdatatype, "rows are in the order (x, y, z)");
+
+  DataSpace analytical_dataspace(2, dataset_dims);
+  DataSet* analytical_dataset = new DataSet(file->createDataSet(
+    "analytical", PredType::NATIVE_DOUBLE, analytical_dataspace
+  ));
+  analytical_dataset->write(analytical_data, PredType::NATIVE_DOUBLE);
+
+  Attribute analytical_attribute = analytical_dataset->createAttribute("Rows", strdatatype, attr_dataspace);
+  analytical_attribute.write(strdatatype, "rows are in the order (x, y, z)");
 
   delete dataset;
   delete file;
