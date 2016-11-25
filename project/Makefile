@@ -11,7 +11,7 @@ ifeq ($(host),Darwin)
 	HDF_INSTALL=/Users/Evan/hpc_codes/installed/hdf5-1.8.18
 	HDF5_LIB:=-L$(HDF_INSTALL)/lib
 	HDF5_INC:=-I$(HDF_INSTALL)/include
-	CFLAGS += $(HDF5_LIB) $(HDF5_INC) $(HDF_INSTALL)/lib/libhdf5.a -lz -lm
+	CFLAGS += $(HDF5_LIB) $(HDF5_INC) $(HDF_INSTALL)/lib/libhdf5.a -lz -lm -lhdf5 -lhdf5_cpp
 else
 	CC:=icpc
 	# FIXME look into this
@@ -19,11 +19,26 @@ else
 endif
 
 COMPILE=$(CC) $(INCLUDES) $(CFLAGS)
-
-all: | bin pr1 pr2
+all: bin
+all: bin/pr1 bin/pr2 bin/h5test
 
 bin:
-	mkdir bin
+	mkdir $@
+
+bin/h5test: src/hdf5_wrapper.cpp
+	$(COMPILE) -o bin/h5test src/hdf5_wrapper.cpp
+
+bin/pr1:
+	$(COMPILE) -o $@ src/gsl_euler.cpp
+
+bin/pr2: bin/rk4.o src/pr2_rk4.cpp
+	$(COMPILE) -o $@ bin/rk4.o src/pr2_rk4.cpp
+	@echo "./bin/pr2 is ready to be executed"
+
+bin/rk4.o: src/rk4.cpp
+	$(COMPILE) -c src/rk4.cpp -o $@
+
+
 
 debug: CFLAGS += -DDEBUG
 debug: all
@@ -32,23 +47,14 @@ check-debug: CFLAGS += -DDEBUG
 check-debug: TESTFLAGS += -s
 check-debug: check
 
-pr1:
-	$(COMPILE) -o bin/pr1 src/gsl_euler.cpp
 
-pr2: rk4 src/pr2_rk4.cpp
-	$(COMPILE) -o bin/pr2 bin/rk4.o src/pr2_rk4.cpp
-	@echo "./bin/pr2 is ready to be executed"
-
-rk4: src/rk4.cpp
-	$(COMPILE) -c src/rk4.cpp -o bin/rk4.o
-
-clean: | bin
+clean: bin
 	rm -f bin/*
 	rm -f test.csv
 
-check: | bin check_pr1 check_pr2
+check: bin check_pr1 check_pr2
 
-check_pr1: rk4 test/*.cpp
+check_pr1: bin/rk4.o test/*.cpp
 	$(COMPILE) -Itest -o bin/testpr2 test/*.cpp bin/rk4.o
 	@echo "running tests..."
 	./bin/testpr2 $(TESTFLAGS)

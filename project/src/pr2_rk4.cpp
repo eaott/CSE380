@@ -2,7 +2,12 @@
 #include <fstream>
 #include "rk4.hpp"
 #include "INIReader.h"
+using std::cout;
+using std::endl;
+#include "H5Cpp.h"
+#include "eigen3-hdf5.hpp"
 
+using namespace H5;
 using namespace std;
 using namespace Eigen;
 
@@ -58,11 +63,23 @@ int main(int argc, char const *argv[]) {
   out.open("test.csv");
   out << "x,y,z\n";
   out << state(0) << "," << state(1) << "," << state(2) << "\n";
-  for (int i = 0; i < iter; i++) {
-     state = rk4(i * step, state, step, particleInField);
-     out << state(0) << "," << state(1) << "," << state(2) << "\n";
-   }
-   out.close();
 
+  VectorXd x(iter);
+  VectorXd y(iter);
+  VectorXd z(iter);
+  for (int i = 0; i < iter; i++) {
+    state = rk4(i * step, state, step, particleInField);
+    x(i) = state(idxX);
+    y(i) = state(idxY);
+    z(i) = state(idxZ);
+    out << state(0) << "," << state(1) << "," << state(2) << "\n";
+  }
+  out.close();
+
+  H5File * file = new H5File("file.h5", H5F_ACC_TRUNC);
+  EigenHDF5::save(*file, "x", x);
+  EigenHDF5::save(*file, "y", y);
+  EigenHDF5::save(*file, "z", z);
+  delete file;
   return 0;
 }
