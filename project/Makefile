@@ -13,7 +13,7 @@ ifeq ($(host),Darwin)
 else
 	CC:=icpc
 	# FIXME look into this
-	CFLAGS += -I$$TACC_GSL_INC -L$$TACC_GSL_LIB -I$$TACC_HDF5_INC -L$$TACC_HDF5_LIB -L$$TAC_HDF5_LIB/libhdf5.a
+	CFLAGS += -I$$TACC_GSL_INC -L$$TACC_GSL_LIB -I$$TACC_HDF5_INC -L$$TACC_HDF5_LIB -L$$TACC_HDF5_LIB/libhdf5.a
 endif
 
 COMPILE=$(CC) $(INCLUDES) $(CFLAGS)
