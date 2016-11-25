@@ -5,7 +5,6 @@
 using std::cout;
 using std::endl;
 #include "H5Cpp.h"
-#include "eigen3-hdf5.hpp"
 
 using namespace H5;
 using namespace std;
@@ -77,9 +76,24 @@ int main(int argc, char const *argv[]) {
   out.close();
 
   H5File * file = new H5File("file.h5", H5F_ACC_TRUNC);
-  EigenHDF5::save(*file, "x", x);
-  EigenHDF5::save(*file, "y", y);
-  EigenHDF5::save(*file, "z", z);
+
+  hsize_t dataset_dims[2];
+  dataset_dims[0] = 3;
+  dataset_dims[1] = iter;
+  DataSpace dataspace(2, dataset_dims);
+  DataSet* dataset = new DataSet(file->createDataSet(
+    "dataset", PredType::NATIVE_DOUBLE, dataspace
+  ));
+
+  double data[3][iter];
+  for (int i = 0; i < iter; i++) {
+    data[0][i] = x(i);
+    data[1][i] = y(i);
+    data[2][i] = z(i);
+  }
+  dataset->write(data, PredType::NATIVE_DOUBLE);
+
+  delete dataset;
   delete file;
   return 0;
 }

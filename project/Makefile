@@ -1,5 +1,3 @@
-.PHONY=check,check_pr1,check_pr2,clean,debug,check-debug
-
 INCLUDES:=-Ithird_party -Iincludes
 
 
@@ -26,7 +24,7 @@ bin:
 	mkdir $@
 
 bin/h5test: src/hdf5_wrapper.cpp
-	$(COMPILE) -o bin/h5test src/hdf5_wrapper.cpp
+	$(COMPILE) -o $@ src/hdf5_wrapper.cpp
 
 bin/pr1:
 	$(COMPILE) -o $@ src/gsl_euler.cpp
@@ -40,6 +38,7 @@ bin/rk4.o: src/rk4.cpp
 
 
 
+.PHONY=check,check_pr1,check_pr2,clean,debug,check-debug
 debug: CFLAGS += -DDEBUG
 debug: all
 
@@ -54,6 +53,7 @@ clean: bin
 
 check: bin check_pr1 check_pr2
 
+# FIXME: um, work on your pr1/pr2 business here....
 check_pr1: bin/rk4.o test/*.cpp
 	$(COMPILE) -Itest -o bin/testpr2 test/*.cpp bin/rk4.o
 	@echo "running tests..."
