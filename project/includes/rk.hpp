@@ -1,5 +1,5 @@
-#ifndef RK4_H
-#define RK4_H
+#ifndef RK_H
+#define RK_H
 
 #include "Eigen/Dense"
 using namespace Eigen;

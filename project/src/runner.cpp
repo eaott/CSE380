@@ -1,8 +1,7 @@
 #include <iostream>
 #include "INIReader.h"
-
-// FIXME: convert the other problems to run using non-main method.
-// will need to create .hpp files for each
+#include "pr1.hpp"
+#include "pr2.hpp"
 
 int main(int argc, char const *argv[]) {
   INIReader reader("test.ini");
@@ -12,9 +11,9 @@ int main(int argc, char const *argv[]) {
   }
   string methodStr = reader.Get("runner", "problem", "problem1");
   if (methodStr == "problem2") {
-
+    run_pr2("test.ini");
   } else {
-
+    run_pr1("test.ini");
   }
   return 0;
 }

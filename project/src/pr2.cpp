@@ -1,6 +1,6 @@
 #include <iostream>
 #include <fstream>
-#include "rk4.hpp"
+#include "rk.hpp"
 #include "INIReader.h"
 using std::cout;
 using std::endl;
@@ -84,10 +84,10 @@ std::string getTime() {
   return str;
 }
 
-int main(int argc, char const *argv[]) {
-  INIReader reader("test.ini");
+int run_pr2(std::string config_file) {
+  INIReader reader(config_file);
   if (reader.ParseError() < 0) {
-    std::cout << "Can't load test.ini\n" << std::endl;
+    std::cout << "Can't load " << config_file << "\n" << std::endl;
     return 1;
   }
   int iter = reader.GetInteger("problem2", "iter", 10000);
@@ -132,7 +132,6 @@ int main(int argc, char const *argv[]) {
   }
 
   H5File * file = new H5File("file.h5", H5F_ACC_TRUNC);
-
 
   hsize_t dataset_dims[2];
   dataset_dims[0] = 3;

@@ -24,8 +24,8 @@ double analytic(double time, double y0) {
   return y0 * exp(-0.1 * time);
 }
 
-int main(int argc, char const *argv[]) {
-  INIReader reader("test.ini");
+int run_pr1(std::string config_file) {
+  INIReader reader(config_file);
   if (reader.ParseError() < 0) {
     std::cout << "Can't load test.ini\n" << std::endl;
     return 1;

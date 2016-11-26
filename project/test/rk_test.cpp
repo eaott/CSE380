@@ -3,7 +3,7 @@
 #include <cmath>
 #include <iostream>
 #include "utils.hpp"
-#include "rk4.hpp"
+#include "rk.hpp"
 #include "rk_utils.hpp"
 using namespace Eigen;
 

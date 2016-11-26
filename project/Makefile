@@ -7,35 +7,31 @@ host:=$(shell uname -s)
 ifeq ($(host),Darwin)
 	CC:=g++
 	HDF_INSTALL=/Users/Evan/hpc_codes/installed/hdf5-1.8.18
-	HDF5_LIB:=-L$(HDF_INSTALL)/lib
-	HDF5_INC:=-I$(HDF_INSTALL)/include
-	CFLAGS += $(HDF5_LIB) $(HDF5_INC) $(HDF_INSTALL)/lib/libhdf5.a
+	HDF5_LIB:=$(HDF_INSTALL)/lib
+	HDF5_INC:=$(HDF_INSTALL)/include
+	CFLAGS += -L$(HDF5_LIB) -I$(HDF5_INC) -L$(HDF_INSTALL)/lib/libhdf5.a
 else
 	CC:=icpc
 	# FIXME look into this
-	CFLAGS += -I$$TACC_GSL_INC -L$$TACC_GSL_LIB -I$$TACC_HDF5_INC -L$$TACC_HDF5_LIB -L$$TACC_HDF5_LIB/libhdf5.a
+	CFLAGS += -I$$TACC_GSL_INC -L$$TACC_GSL_LIB
+	CFLAGS += -I$$TACC_HDF5_INC -L$$TACC_HDF5_LIB -L$$TACC_HDF5_LIB/libhdf5.a
 endif
 
 COMPILE=$(CC) $(INCLUDES) $(CFLAGS)
+
 all: bin
-all: bin/pr1 bin/pr2
+all: runner
 
 bin:
 	mkdir $@
 
-bin/pr1: src/gsl_euler.cpp
-	$(COMPILE) -o $@ src/gsl_euler.cpp
+bin/rk.o: src/rk.cpp
+	$(COMPILE) -c src/rk.cpp -o $@
 
-bin/pr2: bin/rk4.o src/pr2_rk4.cpp
-	$(COMPILE) -o $@ bin/rk4.o src/pr2_rk4.cpp
-	@echo "./bin/pr2 is ready to be executed"
+runner: bin/rk.o src/pr2.cpp src/pr1.cpp src/runner.cpp
+	$(COMPILE) -o $@ bin/rk.o src/pr2.cpp src/runner.cpp src/pr1.cpp
 
-bin/rk4.o: src/rk4.cpp
-	$(COMPILE) -c src/rk4.cpp -o $@
-
-
-
-.PHONY=check,check_pr1,check_pr2,clean,debug,check-debug
+.PHONY=check,clean,debug,check-debug
 debug: CFLAGS += -DDEBUG
 debug: all
 
@@ -43,17 +39,11 @@ check-debug: CFLAGS += -DDEBUG
 check-debug: TESTFLAGS += -s
 check-debug: check
 
-
 clean: bin
-	rm -f bin/*
-	rm -f test.csv
+	@rm -f runner
+	@rm -rf bin
 
-check: bin check_pr1 check_pr2
-
-# FIXME: um, work on your pr1/pr2 business here....
-check_pr1: bin/rk4.o test/*.cpp
-	$(COMPILE) -Itest -o bin/testpr2 test/*.cpp bin/rk4.o
+check: bin bin/rk.o test/*.cpp
+	$(COMPILE) -Itest -o bin/tests test/*.cpp bin/rk.o
 	@echo "running tests..."
-	./bin/testpr2 $(TESTFLAGS)
-
-check_pr2:
+	./bin/tests $(TESTFLAGS)

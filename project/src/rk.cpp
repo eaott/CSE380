@@ -1,4 +1,4 @@
-#include "rk4.hpp"
+#include "rk.hpp"
 using namespace Eigen;
 
 // We know that it's independent of time, but the code shouldn't
