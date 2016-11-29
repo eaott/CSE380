@@ -24,12 +24,7 @@ double analytic(double time, double y0) {
   return y0 * exp(-0.1 * time);
 }
 
-int run_pr1(std::string config_file) {
-  INIReader reader(config_file);
-  if (reader.ParseError() < 0) {
-    std::cout << "Can't load test.ini\n" << std::endl;
-    return 1;
-  }
+int run_pr1(INIReader reader) {
   double h = reader.GetReal("problem1", "h", 1e-6);
   double epsilon_abs = reader.GetReal("problem1", "epsilon_abs", 1e-6);
   double epsilon_rel = reader.GetReal("problem1", "epsilon_rel", 0.0);

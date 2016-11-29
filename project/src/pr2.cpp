@@ -6,6 +6,9 @@ using std::cout;
 using std::endl;
 #include "H5Cpp.h"
 #include <ctime>
+#include <gsl/gsl_errno.h>
+#include <gsl/gsl_matrix.h>
+#include <gsl/gsl_odeiv2.h>
 
 using namespace H5;
 using namespace std;
@@ -22,7 +25,43 @@ double OMEGA = 5.0;
 #define idxUy 4
 #define idxUz 5
 
+int gsl_particle(double t, const double y[], double f[], void * params) {
+  f[idxX] = y[idxUx];
+  f[idxY] = y[idxUy];
+  f[idxZ] = f[idxUz];
+  f[idxUx] = OMEGA * f[idxUy] - TAU_INV * y[idxUx];
+  f[idxUy] = -OMEGA * f[idxUx] - TAU_INV * y[idxUy];
+  f[idxUz] = - TAU_INV * f[idxUz];
+  return GSL_SUCCESS;
+}
 
+int gls_jacobian(double t, const double y[], double *dfdy, double dfdt[], void * params) {
+  gsl_matrix_view dfdy_mat
+    = gsl_matrix_view_array (dfdy, 6, 6);
+  gsl_matrix * m = &dfdy_mat.matrix;
+  for (int i = 0; i < 6; i++) {
+    // No explicit time-dependence.
+    dfdt[i] = 0.0;
+    for (int j = 0; j < 6; j++) {
+      gsl_matrix_set (m, i, j, 0.0);
+    }
+  }
+  gsl_matrix_set (m, idxX, idxUx, 1.0);
+
+  gsl_matrix_set (m, idxY, idxUy, 1.0);
+
+  gsl_matrix_set (m, idxZ, idxUz, 1.0);
+
+  gsl_matrix_set (m, idxUx, idxUx, -TAU_INV);
+  gsl_matrix_set (m, idxUx, idxUy, OMEGA);
+
+  gsl_matrix_set (m, idxUy, idxUx, -OMEGA);
+  gsl_matrix_set (m, idxUy, idxUy, -TAU_INV);
+
+  gsl_matrix_set (m, idxUz, idxUz, -TAU_INV);
+
+  return GSL_SUCCESS;
+}
 
 VectorXd particleInField(double time, VectorXd y){
   VectorXd ret(y.size());
@@ -84,17 +123,23 @@ std::string getTime() {
   return str;
 }
 
-int run_pr2(std::string config_file) {
-  INIReader reader(config_file);
-  if (reader.ParseError() < 0) {
-    std::cout << "Can't load " << config_file << "\n" << std::endl;
+int run_pr2(INIReader reader) {
+  int iter = reader.GetInteger("problem2", "iter", 10000);
+  if (iter <= 0) {
+    std::cout << "Should have a positive number of iterations." << std::endl;
     return 1;
   }
-  int iter = reader.GetInteger("problem2", "iter", 10000);
   double step = reader.GetReal("problem2", "step", 0.01);
+  if (step <= 0) {
+    std::cout << "Should have a positive step size." << std::endl;
+    return 1;
+  }
   string methodStr = reader.Get("problem2", "method", "rk4");
   VectorXd (*rk)(double, VectorXd, double, VectorXd (double, VectorXd));
 
+  // FIXME: here, should actually have evan-rk38, etc. along with the GSL
+  // versions, as done in pr1.cpp. Let's separate the runners
+  // into a GSL and Evan version, passing the parsed reader...
   if (methodStr == "rk38") {
     rk = rk38;
   } else if (methodStr == "rkf") {
@@ -103,7 +148,9 @@ int run_pr2(std::string config_file) {
     methodStr = "rk4";
     rk = rk4;
   }
-  std::cout << iter << " " << step << std::endl;
+#ifdef DEBUG
+  std::cout << iter << " " << step << " " << methodStr << std::endl;
+#endif
   std::string runTime = getTime();
 
   VectorXd state(6);

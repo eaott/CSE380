@@ -27,7 +27,7 @@ VectorXd rkf(double time, VectorXd initialState, double step, VectorXd (*f)(doub
   VectorXd k3 = step * f(time + step * 3.0 / 8.0,
                          initialState + k1 * 3.0 / 32.0 + k2 * 9.0 / 32.0);
   VectorXd k4 = step * f(time + step * 12.0 / 13.0,
-                         initialState + k1 * 1932.0 / 2197 - k2 * 7200.0 / 2197.0 + k3 * 7296.0 / 2197.0);
+                         initialState + k1 * 1932.0 / 2197.0 - k2 * 7200.0 / 2197.0 + k3 * 7296.0 / 2197.0);
   VectorXd k5 = step * f(time + step,
                          initialState + k1 * 439.0 / 216.0 - k2 * 8.0 + k3 * 3680.0 / 513.0 - k4 * 845.0 / 4104.0);
   return initialState + k1 * 25.0 / 216.0 + k3 * 1408.0 / 2565.0 + k4 * 2197.0 / 4104.0 - k5 / 5.0;

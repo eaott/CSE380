@@ -11,9 +11,9 @@ int main(int argc, char const *argv[]) {
   }
   string methodStr = reader.Get("runner", "problem", "problem1");
   if (methodStr == "problem2") {
-    run_pr2("test.ini");
+    run_pr2(reader);
   } else {
-    run_pr1("test.ini");
+    run_pr1(reader);
   }
   return 0;
 }
