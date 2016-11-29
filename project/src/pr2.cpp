@@ -181,7 +181,7 @@ int run_pr2(INIReader reader) {
   H5File * file = new H5File("file.h5", H5F_ACC_TRUNC);
 
   hsize_t dataset_dims[2] = {3, iter};
-  hsize_t chunk_dims[2] = {3, 1000};
+  hsize_t chunk_dims[2] = {1, 1000};
   DSetCreatPropList  *plist = new  DSetCreatPropList;
 	plist->setChunk(2, chunk_dims);
 	plist->setDeflate(6);
