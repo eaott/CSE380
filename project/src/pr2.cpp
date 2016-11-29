@@ -135,7 +135,7 @@ int run_pr2(INIReader reader) {
     return 1;
   }
   string methodStr = reader.Get("problem2", "method", "rk4");
-  VectorXd (*rk)(double, VectorXd, double, VectorXd (double, VectorXd));
+  Rk_Method rk;
 
   // FIXME: here, should actually have evan-rk38, etc. along with the GSL
   // versions, as done in pr1.cpp. Let's separate the runners
@@ -180,18 +180,21 @@ int run_pr2(INIReader reader) {
 
   H5File * file = new H5File("file.h5", H5F_ACC_TRUNC);
 
-  hsize_t dataset_dims[2];
-  dataset_dims[0] = 3;
-  dataset_dims[1] = iter;
+  hsize_t dataset_dims[2] = {3, iter};
+  hsize_t chunk_dims[2] = {3, 1000};
+  DSetCreatPropList  *plist = new  DSetCreatPropList;
+	plist->setChunk(2, chunk_dims);
+	plist->setDeflate(6);
+
   DataSpace dataspace(2, dataset_dims);
   DataSet* dataset = new DataSet(file->createDataSet(
-    "dataset", PredType::NATIVE_DOUBLE, dataspace
+    "dataset", PredType::NATIVE_DOUBLE, dataspace, *plist
   ));
   dataset->write(data, PredType::NATIVE_DOUBLE);
 
   DataSpace analytical_dataspace(2, dataset_dims);
   DataSet* analytical_dataset = new DataSet(file->createDataSet(
-    "analytical", PredType::NATIVE_DOUBLE, analytical_dataspace
+    "analytical", PredType::NATIVE_DOUBLE, analytical_dataspace, *plist
   ));
   analytical_dataset->write(analytical_data, PredType::NATIVE_DOUBLE);
 
@@ -199,6 +202,7 @@ int run_pr2(INIReader reader) {
   writeAttrs(*analytical_dataset, iter, step, methodStr, runTime);
 
   delete analytical_dataset;
+  delete plist;
   delete dataset;
   delete file;
   return 0;

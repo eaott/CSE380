@@ -3,7 +3,7 @@ using namespace Eigen;
 
 // We know that it's independent of time, but the code shouldn't
 // need to know that necessarily to have a nice interface.
-VectorXd rk4(double time, VectorXd initialState, double step, VectorXd (*f)(double, VectorXd)) {
+VectorXd rk4(double time, VectorXd initialState, double step, Rk_Function f) {
   VectorXd k1 = step * f(time, initialState);
   VectorXd k2 = step * f(time + 0.5 * step, initialState + 0.5 * k1);
   VectorXd k3 = step * f(time + 0.5 * step, initialState + 0.5 * k2);
@@ -11,7 +11,7 @@ VectorXd rk4(double time, VectorXd initialState, double step, VectorXd (*f)(doub
   return initialState + 1.0/6.0 * (k1 + k2 * 2 + k3 * 2 + k4);
 }
 
-VectorXd rk38(double time, VectorXd initialState, double step, VectorXd (*f)(double, VectorXd)) {
+VectorXd rk38(double time, VectorXd initialState, double step, Rk_Function f) {
   // see https://en.wikipedia.org/wiki/List_of_Runge%E2%80%93Kutta_methods#3.2F8-rule_fourth-order_method
   VectorXd k1 = step * f(time, initialState);
   VectorXd k2 = step * f(time + step / 3.0, initialState + k1 / 3.0);
@@ -20,7 +20,7 @@ VectorXd rk38(double time, VectorXd initialState, double step, VectorXd (*f)(dou
   return initialState + 1.0/8.0 * (k1 + 3 * k2 + 3 * k3 + k4);
 }
 
-VectorXd rkf(double time, VectorXd initialState, double step, VectorXd (*f)(double, VectorXd)) {
+VectorXd rkf(double time, VectorXd initialState, double step, Rk_Function f) {
   // see https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta%E2%80%93Fehlberg_method
   VectorXd k1 = step * f(time, initialState);
   VectorXd k2 = step * f(time + step / 4.0, initialState + k1 / 4.0);
@@ -33,7 +33,7 @@ VectorXd rkf(double time, VectorXd initialState, double step, VectorXd (*f)(doub
   return initialState + k1 * 25.0 / 216.0 + k3 * 1408.0 / 2565.0 + k4 * 2197.0 / 4104.0 - k5 / 5.0;
 }
 
-VectorXd forwardEuler(double time, VectorXd initialState, double step, VectorXd (*f)(double, VectorXd)) {
+VectorXd forwardEuler(double time, VectorXd initialState, double step, Rk_Function f) {
   VectorXd k1 = step * f(time, initialState);
   return initialState + k1;
 }

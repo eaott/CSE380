@@ -3,12 +3,14 @@
 
 #include "Eigen/Dense"
 using namespace Eigen;
+typedef VectorXd (*Rk_Function) (double, VectorXd);
+typedef VectorXd (*Rk_Method) (double, VectorXd, double, Rk_Function);
 
 VectorXd rk4(double time, VectorXd initialState, double step,
-             VectorXd (*f)(double, VectorXd));
+             Rk_Function f);
 VectorXd rk38(double time, VectorXd initialState, double step,
-            VectorXd (*f)(double, VectorXd));
+            Rk_Function f);
 VectorXd rkf(double time, VectorXd initialState, double step,
-            VectorXd (*f)(double, VectorXd));
+            Rk_Function f);
 
 #endif
