@@ -25,6 +25,9 @@ double OMEGA = 5.0;
 #define idxUy 4
 #define idxUz 5
 
+typedef VectorXd (*Rk_Method) (double, VectorXd, double, Rk_Function);
+
+
 int gsl_particle(double t, const double y[], double f[], void * params) {
   f[idxX] = y[idxUx];
   f[idxY] = y[idxUy];
@@ -123,6 +126,39 @@ std::string getTime() {
   return str;
 }
 
+int rk_gsl(int dim, double y[], double **output,
+           double step, double iter, double startT, std::string methodStr) {
+  double epsilon_abs = 0.01;
+  double epsilon_rel = 0.01;
+  double t = startT;
+
+  gsl_odeiv2_system sys = {gsl_particle, gls_jacobian, dim, NULL};
+
+  const gsl_odeiv2_step_type * method;
+
+  if (methodStr == "rkf") {
+    method = gsl_odeiv2_step_rkf45;
+  } else if (methodStr == "rk8pd") {
+    method = gsl_odeiv2_step_rk8pd;
+  } else {
+    method = gsl_odeiv2_step_rk4;
+  }
+
+  gsl_odeiv2_driver * d = gsl_odeiv2_driver_alloc_y_new(&sys, method,
+                                    step, epsilon_abs, epsilon_rel);
+  for (int i = 0; i < iter; i++) {
+    int status = gsl_odeiv2_driver_apply_fixed_step (d, &t, step, iter, y);
+    if (status != GSL_SUCCESS) {
+      std::cout << "Failure within GSL" << std::endl;
+      return 1;
+    }
+    output[i][idxX] = y[idxX];
+    output[i][idxY] = y[idxY];
+    output[i][idxZ] = y[idxZ];
+  }
+  return 0;
+}
+
 int run_pr2(INIReader reader) {
   int iter = reader.GetInteger("problem2", "iter", 10000);
   if (iter <= 0) {
@@ -134,20 +170,14 @@ int run_pr2(INIReader reader) {
     std::cout << "Should have a positive step size." << std::endl;
     return 1;
   }
-  string methodStr = reader.Get("problem2", "method", "rk4");
-  Rk_Method rk;
-
-  // FIXME: here, should actually have evan-rk38, etc. along with the GSL
-  // versions, as done in pr1.cpp. Let's separate the runners
-  // into a GSL and Evan version, passing the parsed reader...
-  if (methodStr == "rk38") {
-    rk = rk38;
-  } else if (methodStr == "rkf") {
-    rk = rkf;
-  } else {
-    methodStr = "rk4";
-    rk = rk4;
+  int skip = reader.GetInteger("problem2", "skip", 1);
+  if (skip <= 0) {
+    std::cout << "Should have a positive skip size." << std::endl;
   }
+  string methodStr = reader.Get("problem2", "method", "evan-rk4");
+
+  bool verification = reader.GetBoolean("problem2", "verification", "false");
+
 #ifdef DEBUG
   std::cout << iter << " " << step << " " << methodStr << std::endl;
 #endif
@@ -162,22 +192,42 @@ int run_pr2(INIReader reader) {
   state(idxUy) = 0;
   state(idxUz) = 2;
 
-
-  VectorXd analytical_value(6);
   double data[3][iter];
-  double analytical_data[3][iter];
-  for (int i = 0; i < iter; i++) {
-    state = rk(i * step, state, step, particleInField);
-    data[idxX][i] = state(idxX);
-    data[idxY][i] = state(idxY);
-    data[idxZ][i] = state(idxZ);
 
-    analytical_value = analytical((i + 1) * step);
-    analytical_data[idxX][i] = analytical_value(idxX);
-    analytical_data[idxY][i] = analytical_value(idxY);
-    analytical_data[idxZ][i] = analytical_value(idxZ);
+  // FIXME: here, should actually have evan-rk38, etc. along with the GSL
+  // versions, as done in pr1.cpp. Let's separate the runners
+  // into a GSL and Evan version, passing the parsed reader...
+  if (method.substr(0, 4) == "evan") {
+    if (methodStr == "evan-rk38") {
+      rk = rk38;
+    } else if (methodStr == "evan-rkf") {
+      rk = rkf;
+    } else {
+      methodStr = "evan-rk4";
+      rk = rk4;
+    }
+    Rk_Method rk;
+    for (int i = 0; i < iter; i++) {
+      state = rk(i * step, state, step, particleInField);
+      data[idxX][i] = state(idxX);
+      data[idxY][i] = state(idxY);
+      data[idxZ][i] = state(idxZ);
+    }
+  } else {
+    double y[6];
+    for (int i = 0; i < 6; i++) { y[i] = state(i); }
+
+    int status = rk_gsl(6, y, data,
+               h, iter, 0.0, methodStr);
+    if (status != 0) {
+      return status;
+    }
   }
 
+
+
+  // FIXME consider adding a "skip" variable to not include
+  // the entire data set in the hdf5 file, but maybe every 10th point
   H5File * file = new H5File("file.h5", H5F_ACC_TRUNC);
 
   hsize_t dataset_dims[2] = {3, iter};
@@ -191,17 +241,28 @@ int run_pr2(INIReader reader) {
     "dataset", PredType::NATIVE_DOUBLE, dataspace, *plist
   ));
   dataset->write(data, PredType::NATIVE_DOUBLE);
-
-  DataSpace analytical_dataspace(2, dataset_dims);
-  DataSet* analytical_dataset = new DataSet(file->createDataSet(
-    "analytical", PredType::NATIVE_DOUBLE, analytical_dataspace, *plist
-  ));
-  analytical_dataset->write(analytical_data, PredType::NATIVE_DOUBLE);
-
   writeAttrs(*dataset, iter, step, methodStr, runTime);
-  writeAttrs(*analytical_dataset, iter, step, methodStr, runTime);
 
-  delete analytical_dataset;
+  // If in verification mode, include output from analytical
+  // solution.
+  if (verification) {
+    VectorXd analytical_value(6);
+    double analytical_data[3][iter];
+    for (int i = 0; i < iter; i++) {
+      analytical_value = analytical((i + 1) * step);
+      analytical_data[idxX][i] = analytical_value(idxX);
+      analytical_data[idxY][i] = analytical_value(idxY);
+      analytical_data[idxZ][i] = analytical_value(idxZ);
+    }
+    DataSpace analytical_dataspace(2, dataset_dims);
+    DataSet* analytical_dataset = new DataSet(file->createDataSet(
+      "analytical", PredType::NATIVE_DOUBLE, analytical_dataspace, *plist
+    ));
+    analytical_dataset->write(analytical_data, PredType::NATIVE_DOUBLE);
+    writeAttrs(*analytical_dataset, iter, step, methodStr, runTime);
+    delete analytical_dataset;
+  }
+
   delete plist;
   delete dataset;
   delete file;
