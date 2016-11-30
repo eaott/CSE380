@@ -24,28 +24,42 @@ double OMEGA = 5.0;
 #define idxUx 3
 #define idxUy 4
 #define idxUz 5
+#define VECTOR_SIZE 6
 
 typedef VectorXd (*Rk_Method) (double, VectorXd, double, Rk_Function);
-
 
 int gsl_particle(double t, const double y[], double f[], void * params) {
   f[idxX] = y[idxUx];
   f[idxY] = y[idxUy];
-  f[idxZ] = f[idxUz];
-  f[idxUx] = OMEGA * f[idxUy] - TAU_INV * y[idxUx];
-  f[idxUy] = -OMEGA * f[idxUx] - TAU_INV * y[idxUy];
-  f[idxUz] = - TAU_INV * f[idxUz];
+  f[idxZ] = y[idxUz];
+  f[idxUx] = OMEGA * y[idxUy] - TAU_INV * y[idxUx];
+  f[idxUy] = -OMEGA * y[idxUx] - TAU_INV * y[idxUy];
+  f[idxUz] = - TAU_INV * y[idxUz];
   return GSL_SUCCESS;
 }
 
+VectorXd particleInField(double time, VectorXd y){
+  VectorXd ret(VECTOR_SIZE);
+  // Ensure the implementations are identical.
+  gsl_particle(time, y.data(), ret.data(), NULL);
+  return ret;
+}
+
+// FIXME Can I move the GSL functions somewhere else?
+// FIXME Can I unit test on seeing if my implementation and GSL's match for a single iteration?
+// FIXME Adding comments everywhere
+// FIXME maybe making one GSL runner function that can be used by both problem 1 and 2 -- allowing rk4, rkf45, euler, etc. as the options
+// FIXME do same thing but with my implementation? mostly there already
+// FIXME so, idea is having src/GSL.cpp src/solvers.cpp and src/models.cpp or something
+
 int gls_jacobian(double t, const double y[], double *dfdy, double dfdt[], void * params) {
   gsl_matrix_view dfdy_mat
-    = gsl_matrix_view_array (dfdy, 6, 6);
+    = gsl_matrix_view_array (dfdy, VECTOR_SIZE, VECTOR_SIZE);
   gsl_matrix * m = &dfdy_mat.matrix;
-  for (int i = 0; i < 6; i++) {
+  for (int i = 0; i < VECTOR_SIZE; i++) {
     // No explicit time-dependence.
     dfdt[i] = 0.0;
-    for (int j = 0; j < 6; j++) {
+    for (int j = 0; j < VECTOR_SIZE; j++) {
       gsl_matrix_set (m, i, j, 0.0);
     }
   }
@@ -66,19 +80,8 @@ int gls_jacobian(double t, const double y[], double *dfdy, double dfdt[], void *
   return GSL_SUCCESS;
 }
 
-VectorXd particleInField(double time, VectorXd y){
-  VectorXd ret(y.size());
-  ret(idxX) = y(idxUx);
-  ret(idxY) = y(idxUy);
-  ret(idxZ) = y(idxUz);
-  ret(idxUx) = OMEGA * y(idxUy) - TAU_INV * y(idxUx);
-  ret(idxUy) = -OMEGA * y(idxUx) - TAU_INV * y(idxUy);
-  ret(idxUz) = - TAU_INV * y(idxUz);
-  return ret;
-}
-
 VectorXd analytical(double time) {
-  VectorXd ret(6);
+  VectorXd ret(VECTOR_SIZE);
   ret(idxUx) = 20 * exp(-time * TAU_INV) * cos(time * OMEGA);
   ret(idxUy) = -20 * exp(-time * TAU_INV) * sin(time * OMEGA);
   ret(idxUz) = 2 * exp(-time * TAU_INV);
@@ -183,7 +186,7 @@ int run_pr2(INIReader reader) {
 #endif
   std::string runTime = getTime();
 
-  VectorXd state(6);
+  VectorXd state(VECTOR_SIZE);
   state(idxX) = 0;
   state(idxY) = 0;
   state(idxZ) = 0;
@@ -192,12 +195,18 @@ int run_pr2(INIReader reader) {
   state(idxUy) = 0;
   state(idxUz) = 2;
 
-  double data[3][iter];
+  double **data;
+  data = new double *[3];
+  for (int i = 0; i < 3; i++) {
+    data[i] = new double[iter];
+  }
 
   // FIXME: here, should actually have evan-rk38, etc. along with the GSL
   // versions, as done in pr1.cpp. Let's separate the runners
   // into a GSL and Evan version, passing the parsed reader...
-  if (method.substr(0, 4) == "evan") {
+  if (methodStr.substr(0, 4) == "evan") {
+    Rk_Method rk;
+
     if (methodStr == "evan-rk38") {
       rk = rk38;
     } else if (methodStr == "evan-rkf") {
@@ -206,7 +215,6 @@ int run_pr2(INIReader reader) {
       methodStr = "evan-rk4";
       rk = rk4;
     }
-    Rk_Method rk;
     for (int i = 0; i < iter; i++) {
       state = rk(i * step, state, step, particleInField);
       data[idxX][i] = state(idxX);
@@ -215,10 +223,10 @@ int run_pr2(INIReader reader) {
     }
   } else {
     double y[6];
-    for (int i = 0; i < 6; i++) { y[i] = state(i); }
+    for (int i = 0; i < VECTOR_SIZE; i++) { y[i] = state(i); }
 
-    int status = rk_gsl(6, y, data,
-               h, iter, 0.0, methodStr);
+    int status = rk_gsl(VECTOR_SIZE, y, data,
+                        step, iter, 0.0, methodStr);
     if (status != 0) {
       return status;
     }
@@ -231,11 +239,13 @@ int run_pr2(INIReader reader) {
   H5File * file = new H5File("file.h5", H5F_ACC_TRUNC);
 
   hsize_t dataset_dims[2] = {3, iter};
-  hsize_t chunk_dims[2] = {1, 1000};
   DSetCreatPropList  *plist = new  DSetCreatPropList;
-	plist->setChunk(2, chunk_dims);
-	plist->setDeflate(6);
-
+  if (iter > 1000) {
+    hsize_t chunk_dims[2] = {1, 1000};
+  	plist->setChunk(2, chunk_dims);
+    // Arbitrarily chosen level of compression
+  	plist->setDeflate(6);
+  }
   DataSpace dataspace(2, dataset_dims);
   DataSet* dataset = new DataSet(file->createDataSet(
     "dataset", PredType::NATIVE_DOUBLE, dataspace, *plist
@@ -246,7 +256,7 @@ int run_pr2(INIReader reader) {
   // If in verification mode, include output from analytical
   // solution.
   if (verification) {
-    VectorXd analytical_value(6);
+    VectorXd analytical_value(VECTOR_SIZE);
     double analytical_data[3][iter];
     for (int i = 0; i < iter; i++) {
       analytical_value = analytical((i + 1) * step);
