@@ -33,7 +33,7 @@ int gsl_particle(double t, const double y[], double f[], void * params) {
   f[idxY] = y[idxUy];
   f[idxZ] = y[idxUz];
   f[idxUx] = OMEGA * y[idxUy] - TAU_INV * y[idxUx];
-  f[idxUy] = -OMEGA * y[idxUx] - TAU_INV * y[idxUy];
+  f[idxUy] = - OMEGA * y[idxUx] - TAU_INV * y[idxUy];
   f[idxUz] = - TAU_INV * y[idxUz];
   return GSL_SUCCESS;
 }
@@ -129,13 +129,13 @@ std::string getTime() {
   return str;
 }
 
-int rk_gsl(int dim, double y[], double **output,
-           double step, double iter, double startT, std::string methodStr) {
-  double epsilon_abs = 0.01;
-  double epsilon_rel = 0.01;
+MatrixXd rk_gsl(double y[], int iter,
+           double step, double startT,
+           double epsilon_abs, double epsilon_rel, std::string methodStr) {
   double t = startT;
+  MatrixXd output(3, iter);
 
-  gsl_odeiv2_system sys = {gsl_particle, gls_jacobian, dim, NULL};
+  gsl_odeiv2_system sys = {gsl_particle, gls_jacobian, VECTOR_SIZE, NULL};
 
   const gsl_odeiv2_step_type * method;
 
@@ -147,19 +147,46 @@ int rk_gsl(int dim, double y[], double **output,
     method = gsl_odeiv2_step_rk4;
   }
 
-  gsl_odeiv2_driver * d = gsl_odeiv2_driver_alloc_y_new(&sys, method,
-                                    step, epsilon_abs, epsilon_rel);
+  gsl_odeiv2_driver * d = gsl_odeiv2_driver_alloc_y_new(
+      &sys, method, step, epsilon_abs, epsilon_rel);
+
   for (int i = 0; i < iter; i++) {
-    int status = gsl_odeiv2_driver_apply_fixed_step (d, &t, step, iter, y);
+    // Go one step at a time, so we can save the intermediate states.
+    int status = gsl_odeiv2_driver_apply_fixed_step (
+        d, &t, step, 1, y);
+
     if (status != GSL_SUCCESS) {
       std::cout << "Failure within GSL" << std::endl;
-      return 1;
+      break;
     }
-    output[i][idxX] = y[idxX];
-    output[i][idxY] = y[idxY];
-    output[i][idxZ] = y[idxZ];
+    output(idxX, i) = y[idxX];
+    output(idxY, i) = y[idxY];
+    output(idxZ, i) = y[idxZ];
   }
-  return 0;
+  return output;
+}
+
+MatrixXd rk_evan(VectorXd state, int iter,
+           double step, double startT,
+           std::string methodStr) {
+   MatrixXd output(3, iter);
+   Rk_Method rk;
+
+   if (methodStr == "evan-rk38") {
+     rk = rk38;
+   } else if (methodStr == "evan-rkf") {
+     rk = rkf;
+   } else {
+     rk = rk4;
+   }
+   VectorXd tempState = state;
+   for (int i = 0; i < iter; i++) {
+     tempState = rk(i * step, tempState, step, particleInField);
+     output(idxX, i) = tempState(idxX);
+     output(idxY, i) = tempState(idxY);
+     output(idxZ, i) = tempState(idxZ);
+   }
+   return output;
 }
 
 int run_pr2(INIReader reader) {
@@ -180,9 +207,16 @@ int run_pr2(INIReader reader) {
   string methodStr = reader.Get("problem2", "method", "evan-rk4");
 
   bool verification = reader.GetBoolean("problem2", "verification", "false");
+  double epsilon_abs = reader.GetReal("problem2", "epsilon_abs", 1e-6);
+  double epsilon_rel = reader.GetReal("problem2", "epsilon_rel", 0.0);
+
 
 #ifdef DEBUG
-  std::cout << iter << " " << step << " " << methodStr << std::endl;
+  std::cout << "iter:" << iter << "\nstep:" << step <<
+               "\nmethod:" << methodStr << "\nskip:" << skip <<
+               "\nverification:" << verification <<
+               "\nepsilon_abs:" << epsilon_abs <<
+               "\nepsilon_rel:" << epsilon_rel << std::endl;
 #endif
   std::string runTime = getTime();
 
@@ -195,44 +229,27 @@ int run_pr2(INIReader reader) {
   state(idxUy) = 0;
   state(idxUz) = 2;
 
-  double **data;
-  data = new double *[3];
-  for (int i = 0; i < 3; i++) {
-    data[i] = new double[iter];
-  }
+  MatrixXd data(3, iter);
 
   // FIXME: here, should actually have evan-rk38, etc. along with the GSL
   // versions, as done in pr1.cpp. Let's separate the runners
   // into a GSL and Evan version, passing the parsed reader...
   if (methodStr.substr(0, 4) == "evan") {
-    Rk_Method rk;
-
-    if (methodStr == "evan-rk38") {
-      rk = rk38;
-    } else if (methodStr == "evan-rkf") {
-      rk = rkf;
-    } else {
-      methodStr = "evan-rk4";
-      rk = rk4;
-    }
-    for (int i = 0; i < iter; i++) {
-      state = rk(i * step, state, step, particleInField);
-      data[idxX][i] = state(idxX);
-      data[idxY][i] = state(idxY);
-      data[idxZ][i] = state(idxZ);
-    }
+#ifdef DEBUG
+  std::cout << "Using Evan's methods:" << methodStr << std::endl;
+#endif
+    data = rk_evan(state, iter, step, 0.0, methodStr);
   } else {
-    double y[6];
-    for (int i = 0; i < VECTOR_SIZE; i++) { y[i] = state(i); }
-
-    int status = rk_gsl(VECTOR_SIZE, y, data,
-                        step, iter, 0.0, methodStr);
-    if (status != 0) {
-      return status;
-    }
+#ifdef DEBUG
+  std::cout << "Using GSL's methods:" << methodStr << std::endl;
+#endif
+    data = rk_gsl(state.data(), iter,
+                        step, 0.0, epsilon_abs, epsilon_rel, methodStr);
   }
 
-
+#ifdef DEBUG
+  std::cout << "data(0,0): "<< data(0,0) << std::endl;
+#endif
 
   // FIXME consider adding a "skip" variable to not include
   // the entire data set in the hdf5 file, but maybe every 10th point
@@ -250,7 +267,11 @@ int run_pr2(INIReader reader) {
   DataSet* dataset = new DataSet(file->createDataSet(
     "dataset", PredType::NATIVE_DOUBLE, dataspace, *plist
   ));
-  dataset->write(data, PredType::NATIVE_DOUBLE);
+  double hdf5_data[3][iter];
+  for (int i = 0; i < 3; i++)
+    for (int j = 0; j < iter; j++)
+      hdf5_data[i][j] = data(i, j);
+  dataset->write(hdf5_data, PredType::NATIVE_DOUBLE);
   writeAttrs(*dataset, iter, step, methodStr, runTime);
 
   // If in verification mode, include output from analytical

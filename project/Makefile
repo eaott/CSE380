@@ -42,6 +42,7 @@ check-debug: check
 clean: bin
 	@rm -f runner
 	@rm -rf bin
+	@rm -f file.h5
 
 check: bin bin/rk.o test/*.cpp
 	$(COMPILE) -Itest -o bin/tests test/*.cpp bin/rk.o
