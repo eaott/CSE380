@@ -36,15 +36,24 @@ debug: CFLAGS += -DDEBUG
 debug: all
 
 check-debug: CFLAGS += -DDEBUG
-check-debug: TESTFLAGS += -s
+check-debug: TESTFLAGS += -as
 check-debug: check
 
-clean: bin
+clean:
 	@rm -f runner
 	@rm -rf bin
 	@rm -f file.h5
+	@rm -f *.gcov
+	@rm -f *.gcno
+	@rm -f *.gcda
 
 check: bin bin/rk.o test/*.cpp
-	$(COMPILE) -Itest -o bin/tests test/*.cpp bin/rk.o
+	$(COMPILE) -Itest -o bin/tests test/*.cpp bin/rk.o src/pr2.cpp
 	@echo "running tests..."
 	./bin/tests $(TESTFLAGS)
+
+coverage:	CC:=g++
+coverage:	CFLAGS += -g -coverage
+coverage: clean | check
+coverage:
+	gcov -r -s src

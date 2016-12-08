@@ -5,6 +5,7 @@
 using std::cout;
 using std::endl;
 #include "H5Cpp.h"
+#include "pr2.hpp"
 #include <ctime>
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_matrix.h>
@@ -46,7 +47,6 @@ VectorXd particleInField(double time, VectorXd y){
 }
 
 // FIXME Can I move the GSL functions somewhere else?
-// FIXME Can I unit test on seeing if my implementation and GSL's match for a single iteration?
 // FIXME Adding comments everywhere
 // FIXME maybe making one GSL runner function that can be used by both problem 1 and 2 -- allowing rk4, rkf45, euler, etc. as the options
 // FIXME do same thing but with my implementation? mostly there already
@@ -209,6 +209,7 @@ int run_pr2(INIReader reader) {
   bool verification = reader.GetBoolean("problem2", "verification", "false");
   double epsilon_abs = reader.GetReal("problem2", "epsilon_abs", 1e-6);
   double epsilon_rel = reader.GetReal("problem2", "epsilon_rel", 0.0);
+  string outputfile = reader.Get("problem2", "outputfile", "file.h5");
 
 
 #ifdef DEBUG
@@ -253,7 +254,7 @@ int run_pr2(INIReader reader) {
 
   // FIXME consider adding a "skip" variable to not include
   // the entire data set in the hdf5 file, but maybe every 10th point
-  H5File * file = new H5File("file.h5", H5F_ACC_TRUNC);
+  H5File * file = new H5File(outputfile, H5F_ACC_TRUNC);
 
   hsize_t dataset_dims[2] = {3, iter};
   DSetCreatPropList  *plist = new  DSetCreatPropList;

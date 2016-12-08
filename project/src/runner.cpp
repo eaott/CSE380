@@ -4,9 +4,9 @@
 #include "pr2.hpp"
 
 int main(int argc, char const *argv[]) {
-  INIReader reader("test.ini");
+  INIReader reader("input.data");
   if (reader.ParseError() < 0) {
-    std::cout << "Can't load test.ini\n" << std::endl;
+    std::cout << "Can't load input.dat\n" << std::endl;
     return 1;
   }
   string methodStr = reader.Get("runner", "problem", "problem1");

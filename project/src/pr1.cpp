@@ -16,6 +16,7 @@ int func(double t, const double y[], double f[], void * params) {
 
 int jacobian(double t, const double y[], double *dfdy, double dfdt[], void * params) {
   dfdy[0] = - 0.1;
+
   dfdt[0] = 0.0;
   return GSL_SUCCESS;
 }

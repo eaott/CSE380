@@ -1,5 +1,8 @@
 test.csv
-bin
 bin/*
 runner
 *.h5
+*.gcno
+*.gcov
+*.gcda
+test*.ini
