@@ -4,7 +4,7 @@
 #include "pr2.hpp"
 
 int main(int argc, char const *argv[]) {
-  INIReader reader("input.data");
+  INIReader reader("input.dat");
   if (reader.ParseError() < 0) {
     std::cout << "Can't load input.dat\n" << std::endl;
     return 1;

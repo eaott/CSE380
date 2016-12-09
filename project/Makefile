@@ -1,5 +1,8 @@
 INCLUDES:=-Ithird_party -Iincludes
 
+RUNNER:=src/runner.cpp
+SOURCES:=src/rk.cpp src/pr1.cpp src/pr2.cpp
+.PHONY=check,clean,debug,check-debug
 
 CFLAGS:= -lgsl -lgslcblas -lz -lm -lhdf5 -lhdf5_cpp
 TESTFLAGS:=
@@ -9,7 +12,7 @@ ifeq ($(host),Darwin)
 	HDF_INSTALL=/Users/Evan/hpc_codes/installed/hdf5-1.8.18
 	HDF5_LIB:=$(HDF_INSTALL)/lib
 	HDF5_INC:=$(HDF_INSTALL)/include
-	CFLAGS += -L$(HDF5_LIB) -I$(HDF5_INC) -L$(HDF_INSTALL)/lib/libhdf5.a
+	CFLAGS += -L$(HDF5_LIB) -I$(HDF5_INC)
 	COV_FLAGS:=-o=$(PWD)
 else
 	CC:=icpc
@@ -21,21 +24,11 @@ endif
 
 COMPILE=$(CC) $(INCLUDES) $(CFLAGS)
 
-all: bin
-all: runner
+runner: $(RUNNER) $(SOURCES)
+	$(COMPILE) -o $@ $^
 
-bin:
-	mkdir $@
-
-bin/rk.o: src/rk.cpp
-	$(COMPILE) -c src/rk.cpp -o $@
-
-runner: bin/rk.o src/pr2.cpp src/pr1.cpp src/runner.cpp
-	$(COMPILE) -o $@ bin/rk.o src/pr2.cpp src/runner.cpp src/pr1.cpp
-
-.PHONY=check,clean,debug,check-debug
 debug: CFLAGS += -DDEBUG
-debug: all
+debug: clean | runner
 
 check-debug: CFLAGS += -DDEBUG
 check-debug: TESTFLAGS += -as
@@ -43,19 +36,22 @@ check-debug: check
 
 clean:
 	@rm -f runner
-	@rm -rf bin
+	@rm -f check
+	@rm -rf check.dSYM
 	@rm -f file.h5
 	@rm -f *.gcov
 	@rm -f *.gcno
 	@rm -f *.gcda
 
-check: bin test/*.cpp
-	$(COMPILE) -Itest -o bin/tests test/*.cpp src/pr1.cpp src/pr2.cpp src/rk.cpp
+check: test/*.cpp
+	$(COMPILE) -Itest -o check test/*.cpp $(SOURCES)
 	@echo "running tests..."
-	./bin/tests $(TESTFLAGS)
+	./check $(TESTFLAGS)
 
 coverage:	CC:=g++
 coverage:	CFLAGS += -g -coverage
 coverage: clean | check
 coverage:
-	gcov $(COV_FLAGS) -f src/pr1.cpp src/pr2.cpp src/rk.cpp | grep -A2 "src/.*\.cpp'"
+	@echo "Coverage for the source files:"
+	gcov $(COV_FLAGS) -f $(SOURCES) | grep -A2 "src/.*\.cpp'"
+	@echo "Unless you still need the .gcov files, recommend running \`make clean\` now..."

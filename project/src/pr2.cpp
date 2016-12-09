@@ -217,7 +217,8 @@ int run_pr2(INIReader reader) {
                "\nmethod:" << methodStr << "\nskip:" << skip <<
                "\nverification:" << verification <<
                "\nepsilon_abs:" << epsilon_abs <<
-               "\nepsilon_rel:" << epsilon_rel << std::endl;
+               "\nepsilon_rel:" << epsilon_rel <<
+               "\noutputfile:" << outputfile << std::endl;
 #endif
   std::string runTime = getTime();
 
