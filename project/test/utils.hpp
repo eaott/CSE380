@@ -1,5 +1,6 @@
 #ifndef UTILS
 #define UTILS
+#define DEFAULT_THRESHOLD 1e-10
 #include "Eigen/Dense"
 using namespace Eigen;
 

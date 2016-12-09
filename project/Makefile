@@ -10,11 +10,13 @@ ifeq ($(host),Darwin)
 	HDF5_LIB:=$(HDF_INSTALL)/lib
 	HDF5_INC:=$(HDF_INSTALL)/include
 	CFLAGS += -L$(HDF5_LIB) -I$(HDF5_INC) -L$(HDF_INSTALL)/lib/libhdf5.a
+	COV_FLAGS:=-o=$(PWD)
 else
 	CC:=icpc
 	# FIXME look into this
 	CFLAGS += -I$$TACC_GSL_INC -L$$TACC_GSL_LIB
 	CFLAGS += -I$$TACC_HDF5_INC -L$$TACC_HDF5_LIB -L$$TACC_HDF5_LIB/libhdf5.a
+	COV_FLAGS:=-o$(PWD)
 endif
 
 COMPILE=$(CC) $(INCLUDES) $(CFLAGS)
@@ -47,8 +49,8 @@ clean:
 	@rm -f *.gcno
 	@rm -f *.gcda
 
-check: bin bin/rk.o test/*.cpp
-	$(COMPILE) -Itest -o bin/tests test/*.cpp bin/rk.o src/pr2.cpp
+check: bin test/*.cpp
+	$(COMPILE) -Itest -o bin/tests test/*.cpp src/pr1.cpp src/pr2.cpp src/rk.cpp
 	@echo "running tests..."
 	./bin/tests $(TESTFLAGS)
 
@@ -56,4 +58,4 @@ coverage:	CC:=g++
 coverage:	CFLAGS += -g -coverage
 coverage: clean | check
 coverage:
-	gcov -r -s src
+	gcov $(COV_FLAGS) -f src/pr1.cpp src/pr2.cpp src/rk.cpp | grep -A2 "src/.*\.cpp'"

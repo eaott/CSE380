@@ -7,7 +7,7 @@ bool equal(double a, double b, double threshold) {
 }
 
 bool equal(double a, double b) {
-  return equal(a, b, 1e-10);
+  return equal(a, b, DEFAULT_THRESHOLD);
 }
 
 VectorXd exponentialDecay(double time, VectorXd y){

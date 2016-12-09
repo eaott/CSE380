@@ -6,7 +6,8 @@
 #include "rk_utils.hpp"
 using namespace Eigen;
 
-void exponentialDecayRunner(VectorXd (*rk)(double, VectorXd, double, VectorXd (double, VectorXd))) {
+void exponentialDecayRunner(VectorXd (*rk)(double, VectorXd, double, VectorXd (double, VectorXd)),
+                            double threshold) {
   VectorXd state(1);
   state(0) = 20;
 
@@ -16,10 +17,14 @@ void exponentialDecayRunner(VectorXd (*rk)(double, VectorXd, double, VectorXd (d
   for (int i = 0; i < ITER; i++) {
      state = rk(i * STEP, state, STEP, exponentialDecay);
    }
-   REQUIRE(equal(state(0), 0.0));
+   REQUIRE(equal(state(0), 0.0, threshold));
+}
+void exponentialDecayRunner(VectorXd (*rk)(double, VectorXd, double, VectorXd (double, VectorXd))) {
+  exponentialDecayRunner(rk, DEFAULT_THRESHOLD);
 }
 
-void exponentialDecay2DRunner(VectorXd (*rk)(double, VectorXd, double, VectorXd (double, VectorXd))) {
+void exponentialDecay2DRunner(VectorXd (*rk)(double, VectorXd, double, VectorXd (double, VectorXd)),
+                              double threshold) {
   VectorXd state(2);
   state(0) = 0.0;
   state(1) = 20;
@@ -30,13 +35,15 @@ void exponentialDecay2DRunner(VectorXd (*rk)(double, VectorXd, double, VectorXd 
   for (int i = 0; i < ITER; i++) {
      state = rk(i * STEP, state, STEP, exponentialDecay2D);
    }
-   REQUIRE(equal(state(0), 40.0));
-   REQUIRE(equal(state(1), 0.0));
+   REQUIRE(equal(state(0), 40.0, threshold));
+   REQUIRE(equal(state(1), 0.0, threshold));
+}
+void exponentialDecay2DRunner(VectorXd (*rk)(double, VectorXd, double, VectorXd (double, VectorXd))) {
+  exponentialDecay2DRunner(rk, DEFAULT_THRESHOLD);
 }
 
-
 void sinusoidalRunner(VectorXd (*rk)(double, VectorXd, double, VectorXd (double, VectorXd)),
-                      double limit, double xResult, double yResult) {
+                      double limit, double xResult, double yResult, double threshold) {
   VectorXd state(2);
   state(0) = 0;
   state(1) = 1;
@@ -54,11 +61,16 @@ void sinusoidalRunner(VectorXd (*rk)(double, VectorXd, double, VectorXd (double,
     std::cout << limit << " " << state(0) - xResult << " " << state(1) - yResult << std::endl;
    #endif
 
-   REQUIRE(equal(state(0), xResult));
-   REQUIRE(equal(state(1), yResult));
+   REQUIRE(equal(state(0), xResult, threshold));
+   REQUIRE(equal(state(1), yResult, threshold));
+}
+void sinusoidalRunner(VectorXd (*rk)(double, VectorXd, double, VectorXd (double, VectorXd)),
+                      double limit, double xResult, double yResult) {
+  sinusoidalRunner(rk, limit, xResult, yResult, DEFAULT_THRESHOLD);
 }
 
-void magneticRunner(VectorXd (*rk)(double, VectorXd, double, VectorXd (double, VectorXd))) {
+void magneticRunner(VectorXd (*rk)(double, VectorXd, double, VectorXd (double, VectorXd)),
+                    double threshold) {
   VectorXd state(3);
   state(0) = 0;
   state(1) = 20;
@@ -90,6 +102,9 @@ void magneticRunner(VectorXd (*rk)(double, VectorXd, double, VectorXd (double, V
     std::cout << cumulativeError << " " << absCumulativeError << std::endl;
    #endif
    REQUIRE(zFixed);
-   REQUIRE(equal(cumulativeError, 0.0, 2e-9));
-   REQUIRE(absCumulativeError < 1e-8);
+   REQUIRE(equal(cumulativeError, 0.0, threshold));
+   REQUIRE(absCumulativeError < threshold);
+}
+void magneticRunner(VectorXd (*rk)(double, VectorXd, double, VectorXd (double, VectorXd))) {
+  magneticRunner(rk, 1e-8);
 }

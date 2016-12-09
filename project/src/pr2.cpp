@@ -51,7 +51,7 @@ VectorXd particleInField(double time, VectorXd y){
 // FIXME maybe making one GSL runner function that can be used by both problem 1 and 2 -- allowing rk4, rkf45, euler, etc. as the options
 // FIXME do same thing but with my implementation? mostly there already
 // FIXME so, idea is having src/GSL.cpp src/solvers.cpp and src/models.cpp or something
-
+// FIXME I think I can kill the jacobian function safely
 int gls_jacobian(double t, const double y[], double *dfdy, double dfdt[], void * params) {
   gsl_matrix_view dfdy_mat
     = gsl_matrix_view_array (dfdy, VECTOR_SIZE, VECTOR_SIZE);

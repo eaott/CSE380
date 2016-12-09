@@ -12,5 +12,7 @@ VectorXd rk38(double time, VectorXd initialState, double step,
             Rk_Function f);
 VectorXd rkf(double time, VectorXd initialState, double step,
             Rk_Function f);
+VectorXd forwardEuler(double time, VectorXd initialState, double step,
+            Rk_Function f);
 
 #endif
