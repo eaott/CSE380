@@ -1,3 +1,8 @@
+*.bbl
+*.blg
+*.nav
+*.snm
+*.toc
 test.csv
 bin/*
 runner
