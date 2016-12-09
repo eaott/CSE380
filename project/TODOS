@@ -1,9 +1,5 @@
-- actually have output from problem 1
-- create the post-processing for problem 1
 - write tests for problem 1
-- write scripts for looking at convergence for both? algorithms
 - address other fixmes around the codebase
   > grep -A2 -B2 "FIXME" src/* test/* includes/*
 - presentation:
--- pr1: convergence / timing plots
 -- pr2: convergence/timing for different methods

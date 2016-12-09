@@ -39,9 +39,8 @@ clean:
 	@rm -f check
 	@rm -rf check.dSYM
 	@rm -f file.h5
-	@rm -f *.gcov
-	@rm -f *.gcno
-	@rm -f *.gcda
+	@rm -f *.gcov *.gcno *.gcda
+	@rm -f *.bbl *.blg *.nav *.snm *.toc *.aux *.fdb_latexmk *.fls *log *.out *.synctex.gz
 
 check: test/*.cpp
 	$(COMPILE) -Itest -o check test/*.cpp $(SOURCES)

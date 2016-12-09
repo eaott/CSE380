@@ -108,12 +108,8 @@ int run_pr1(INIReader reader) {
 
     gsl_odeiv2_system sys = {func, jacobian, 1, NULL};
 
-    // FIXME this is the backward Euler so should be comparable,
-    // but might consider using a better step function -- maybe
-    // gsl_odeiv2_step_rk8pd? or the GSL version of Runge-Kutta-Fehlberg
-    // gsl_odeiv2_step_rkf45
     gsl_odeiv2_driver * d =
-      gsl_odeiv2_driver_alloc_y_new(&sys, gsl_odeiv2_step_rk1imp,
+      gsl_odeiv2_driver_alloc_y_new(&sys, gsl_odeiv2_step_rk4,
                                     h, epsilon_abs, epsilon_rel);
 
     while (t < t_end)

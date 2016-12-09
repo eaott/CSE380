@@ -154,7 +154,7 @@ for an initial condition specified at $t_0$.
 \begin{frame}
 \frametitle{Results}
 \begin{center}
-\includegraphics[scale = 0.5]{/Users/Evan/GitProjects/cse380/project/pr2_performance.png}
+\includegraphics[scale = 0.5]{/Users/Evan/GitProjects/cse380/project/pr1_performance.png}
 \end{center}
 \end{frame}
 
@@ -162,10 +162,10 @@ for an initial condition specified at $t_0$.
 \frametitle{Results}
 \begin{itemize}
 \item My implementation of forward Euler is slower than GSL's RK4 method on the same step size
-\item My implementation is also less accurate than GSL's RK4 on the same step size
+\item My implementation is also less accurate than GSL's RK4 on the same step size \pause
+\item This shouldn't be surprising, as forward Euler is in general less accurate than more general Runge-Kutta methods. Furthermore, I decided to use \texttt{Eigen} for handling vectors for problem 2 and the same overhead is present here.
+\item Not entirely sure why GSL does relatively poorly for $h=10^{-5}$, but perhaps the larger step sizes were spuriously accurate
 \end{itemize}
-This shouldn't be surprising, as forward Euler is in general less accurate than more general Runge-Kutta methods.
-Furthermore, I decided to use \texttt{Eigen} for handling vectors for problem 2 and the same overhead is present here.
 \end{frame}
 
 \section{Problem 2}
