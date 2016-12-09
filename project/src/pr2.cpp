@@ -157,7 +157,7 @@ MatrixXd rk_gsl(double y[], int iter, double step, double startT,
   double t = startT;
   MatrixXd output(3, iter);
 
-  gsl_odeiv2_system sys = {gsl_particle, gls_jacobian, VECTOR_SIZE, NULL};
+  gsl_odeiv2_system sys = {gsl_particle, NULL, VECTOR_SIZE, NULL};
 
   const gsl_odeiv2_step_type * method;
 
@@ -324,9 +324,9 @@ int run_pr2(INIReader reader) {
   if (verification) {
     VectorXd analytical_value(VECTOR_SIZE);
     double analytical_data[3][iter];
-    for (int i = 1; i <= iter; i++) {
+    for (int i = 0; i < iter; i++) {
       // Find the value at the end of the step
-      analytical_value = analytical(i * step);
+      analytical_value = analytical((i + 1) * step);
       analytical_data[idxX][i] = analytical_value(idxX);
       analytical_data[idxY][i] = analytical_value(idxY);
       analytical_data[idxZ][i] = analytical_value(idxZ);
