@@ -7,7 +7,6 @@
 #include "rk_utils.hpp"
 using namespace Eigen;
 
-// FIXME need to add test for forward euler implementation
 // FIXME also need to test problem 1 AT ALL
 
 /*

@@ -1,3 +1,6 @@
+/*
+ * Basic runner that decides between loading one of the two problems.
+ */
 #include <iostream>
 #include "INIReader.h"
 #include "pr1.hpp"

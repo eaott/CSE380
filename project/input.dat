@@ -6,7 +6,7 @@ problem=problem2
 [problem1]
 ; Overall problem statement
 h = 1e-3              ; fixed step length
-t = 0.0               ; start time
+t0 = 0.0              ; initial value of t
 t_end = 10.0          ; end time
 y0 = 10.0             ; initial value of y
 
