@@ -1,6 +1,6 @@
 [runner]
 ;problem=problem1
-problem=problem2
+problem=problem1
 
 
 [problem1]
@@ -9,6 +9,10 @@ h = 1e-3              ; fixed step length
 t0 = 0.0              ; initial value of t
 t_end = 10.0          ; end time
 y0 = 10.0             ; initial value of y
+; options for method:
+; gsl -- a GSL RK4 solver
+; evan -- a custom forward Euler solver
+method = gsl
 
 ; GSL-specific information
 nsteps = 1            ; GSL number of steps each time called
@@ -18,7 +22,7 @@ epsilon_rel = 0.0     ; GLS relative error tolerance
 
 
 [problem2]
-iter=1000000
+iter=1000
 step=0.0001
 ;step=0.5 ; Christmas tree + Lone Star mode
 ; options for method:
@@ -29,4 +33,6 @@ step=0.0001
 ; evan-rk38: variation of RK4, the "3/8-rule"
 ; evan-rkf: Runge-Kutta-Fehlberg using Evan's implementation.
 method=evan-rk4
+; whether to include analytical output in the HDF5 file,
+; and to also show the error norm in standard output
 verification=true

@@ -7,9 +7,19 @@
 #include "pr2.hpp"
 
 int main(int argc, char const *argv[]) {
-  INIReader reader("input.dat");
+  std::string filename = "input.dat";
+#ifdef DEBUG
+  std::cout << argc << '\n';
+#endif
+  if (argc > 1) {
+    filename = argv[1];
+#ifdef DEBUG
+    std::cout << filename << '\n';
+#endif
+  }
+  INIReader reader(filename);
   if (reader.ParseError() < 0) {
-    std::cout << "Can't load input.dat\n" << std::endl;
+    std::cout << "Can't load " << filename << "\n" << std::endl;
     return 1;
   }
   string methodStr = reader.Get("runner", "problem", "problem1");

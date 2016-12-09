@@ -6,3 +6,7 @@ runner
 *.gcov
 *.gcda
 test*.ini
+outputs/*
+outputs
+inputs
+inputs/*
