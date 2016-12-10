@@ -1,5 +1,0 @@
-- write tests for problem 1
-- address other fixmes around the codebase
-  > grep -A2 -B2 "FIXME" src/* test/* includes/*
-- presentation:
--- pr2: convergence/timing for different methods
