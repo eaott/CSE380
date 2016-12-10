@@ -18,6 +18,13 @@ for selecting which problem to run, and the parameters for both problems. All op
 ```
 See below for post-processing and other scripts.
 
+# Project structure
+- `includes` - header files needed for operation of main files, including the input parser
+- `src` - main source code for each problem, and the custom versions of Euler and RK solvers
+- `test` - code for tests, including the test framework itself
+- `third_party` - really, just Eigen for all the vector / matrix operations
+- `final_presentation.pdf` is the presentation with results combined
+
 # Make Targets
 The main targets for `make` are:
 - `runner` - creates the executable `runner` for the entire project
@@ -27,11 +34,6 @@ The main targets for `make` are:
 - `coverage` - requires the `gcc` module to be loaded (`module load gcc`), will use `gcov` and run tests to determine the code coverage of source files
 - `clean` - remove binaries, `.gcov` files, etc.
 
-# Project structure
-- `includes` - header files needed for operation of main files, including the input parser
-- `src` - main source code for each problem, and the custom versions of Euler and RK solvers
-- `test` - code for tests, including the test framework itself
-- `third_party` - really, just Eigen for all the vector / matrix operations
 
 # Post-processing
 Post-processing, in particular, with regard to performance and accuracy measures
