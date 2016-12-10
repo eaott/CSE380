@@ -78,10 +78,9 @@ VectorXd particleInField(double t, VectorXd y){
 }
 
 // FIXME Can I move the GSL functions somewhere else?
-// FIXME Adding comments everywhere
-// FIXME maybe making one GSL runner function that can be used by both problem 1 and 2 -- allowing rk4, rkf45, euler, etc. as the options
-// FIXME do same thing but with my implementation? mostly there already
-// FIXME so, idea is having src/GSL.cpp src/solvers.cpp and src/models.cpp or something
+// maybe making one GSL runner function that can be used by both problem 1 and 2 -- allowing rk4, rkf45, euler, etc. as the options
+// do same thing but with my implementation? mostly there already
+// so, idea is having src/GSL.cpp src/solvers.cpp and src/models.cpp or something
 
 /*
  * I'll be honest, to get this solution, I relied on Mathematica solving
@@ -250,6 +249,7 @@ int run_pr2(INIReader reader) {
   double epsilon_rel = reader.GetReal("problem2", "epsilon_rel", 0.0);
 
   // Output file for the program -- HDF5 format
+  bool trajectory = reader.GetBoolean("problem2", "trajectory", true);
   string outputfile = reader.Get("problem2", "outputfile", "file.h5");
 
 
@@ -292,56 +292,70 @@ int run_pr2(INIReader reader) {
   std::cout << "data(0,0): "<< data(0,0) << std::endl;
 #endif
 
-  H5File * file = new H5File(outputfile, H5F_ACC_TRUNC);
+  if (trajectory) {
+    H5File * file = new H5File(outputfile, H5F_ACC_TRUNC);
 
-  hsize_t dataset_dims[2] = {3, iter};
+    hsize_t dataset_dims[2] = {3, iter};
 
-  // Allow for chunking and compressing
-  DSetCreatPropList  *plist = new  DSetCreatPropList;
-  if (iter > 1000) {
-    hsize_t chunk_dims[2] = {1, 1000};
-  	plist->setChunk(2, chunk_dims);
-    // Arbitrarily chosen level of compression
-  	plist->setDeflate(6);
-  }
-
-  DataSpace dataspace(2, dataset_dims);
-  DataSet* dataset = new DataSet(file->createDataSet(
-    "dataset", PredType::NATIVE_DOUBLE, dataspace, *plist
-  ));
-
-  // Convert from Eigen to a double matrix -- HDF5 doesn't have great
-  // support here for Eigen, so have to do it a little by hand.
-  double hdf5_data[3][iter];
-  for (int i = 0; i < 3; i++)
-    for (int j = 0; j < iter; j++)
-      hdf5_data[i][j] = data(i, j);
-  dataset->write(hdf5_data, PredType::NATIVE_DOUBLE);
-  writeAttrs(*dataset, iter, step, methodStr, runTime);
-
-  // If in verification mode, include output from analytical
-  // solution.
-  if (verification) {
-    VectorXd analytical_value(VECTOR_SIZE);
-    double analytical_data[3][iter];
-    for (int i = 0; i < iter; i++) {
-      // Find the value at the end of the step
-      analytical_value = analytical((i + 1) * step);
-      analytical_data[idxX][i] = analytical_value(idxX);
-      analytical_data[idxY][i] = analytical_value(idxY);
-      analytical_data[idxZ][i] = analytical_value(idxZ);
+    // Allow for chunking and compressing
+    DSetCreatPropList  *plist = new  DSetCreatPropList;
+    if (iter > 1000) {
+      hsize_t chunk_dims[2] = {1, 1000};
+    	plist->setChunk(2, chunk_dims);
+      // Arbitrarily chosen level of compression
+    	plist->setDeflate(6);
     }
-    DataSpace analytical_dataspace(2, dataset_dims);
-    DataSet* analytical_dataset = new DataSet(file->createDataSet(
-      "analytical", PredType::NATIVE_DOUBLE, analytical_dataspace, *plist
+
+    DataSpace dataspace(2, dataset_dims);
+    DataSet* dataset = new DataSet(file->createDataSet(
+      "dataset", PredType::NATIVE_DOUBLE, dataspace, *plist
     ));
-    analytical_dataset->write(analytical_data, PredType::NATIVE_DOUBLE);
-    writeAttrs(*analytical_dataset, iter, step, methodStr, runTime);
-    delete analytical_dataset;
+
+    // Convert from Eigen to a double matrix -- HDF5 doesn't have great
+    // support here for Eigen, so have to do it a little by hand.
+    double hdf5_data[3][iter];
+    for (int i = 0; i < 3; i++)
+      for (int j = 0; j < iter; j++)
+        hdf5_data[i][j] = data(i, j);
+    dataset->write(hdf5_data, PredType::NATIVE_DOUBLE);
+    writeAttrs(*dataset, iter, step, methodStr, runTime);
+
+    // If in verification mode, include output from analytical
+    // solution.
+    if (verification) {
+      VectorXd analytical_value(VECTOR_SIZE);
+      double analytical_data[3][iter];
+      for (int i = 0; i < iter; i++) {
+        // Find the value at the end of the step
+        analytical_value = analytical((i + 1) * step);
+        analytical_data[idxX][i] = analytical_value(idxX);
+        analytical_data[idxY][i] = analytical_value(idxY);
+        analytical_data[idxZ][i] = analytical_value(idxZ);
+      }
+      DataSpace analytical_dataspace(2, dataset_dims);
+      DataSet* analytical_dataset = new DataSet(file->createDataSet(
+        "analytical", PredType::NATIVE_DOUBLE, analytical_dataspace, *plist
+      ));
+      analytical_dataset->write(analytical_data, PredType::NATIVE_DOUBLE);
+      writeAttrs(*analytical_dataset, iter, step, methodStr, runTime);
+      delete analytical_dataset;
+    }
+
+    delete plist;
+    delete dataset;
+    delete file;
   }
 
-  delete plist;
-  delete dataset;
-  delete file;
+  std::cout << "[pr2_results]" << '\n';
+  std::cout << "step: " << step << '\n';
+  std::cout << "iter: " << iter << '\n';
+  std::cout << "method: " << methodStr << '\n';
+  if (verification) {
+    VectorXd ana = analytical(step * iter);
+    VectorXd result = data.col(iter - 1);
+    std::cout << "error: " << (ana.head<3>() - result).norm() << '\n';
+    std::cout << "time: ";
+  }
+
   return 0;
 }

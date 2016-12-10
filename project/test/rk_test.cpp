@@ -7,8 +7,6 @@
 #include "rk_utils.hpp"
 using namespace Eigen;
 
-// FIXME also need to test problem 1 AT ALL
-
 /*
  * Tests for RK4
  */

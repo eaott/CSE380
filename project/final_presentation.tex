@@ -179,6 +179,28 @@ z(t)&=2 \tau  e^{-\frac{t}{\tau }} \left(e^{t/\tau }-1\right)
 \end{align*}
 \end{frame}
 
+\subsection{Results}
+\begin{frame}
+\frametitle{Results}
+\begin{center}
+\includegraphics[scale = 0.5]{/Users/Evan/GitProjects/cse380/project/pr2_performance.png}
+\end{center}
+\end{frame}
+
+\begin{frame}[allowframebreaks]
+\frametitle{Results}
+\begin{itemize}
+\item Due to initially misreading the project assignment, I implemented my own RK solvers (``custom'' in previous slide).
+\item Similar to problem 1, my solutions are slower in execution time (again, likely due to Eigen).
+\item Accuracy above $h=10^{-4}$ behaves as expected, with my solutions being less accurate, and all solutions worsening.
+\item I can't explain why the accuracy gets worse (simulation was fixed total time), but maybe the numerical error levels out at some point?
+\item Interestingly, the GSL implementation of Runge-Kutta-Fehlberg was the fastest GSL, followed by RK4 then Runge-Kutta Prince-Dormand (a higher order solver)
+\item For my solutions, RK4 and the ``3/8'' rule RK method showed similar timing, while Runge-Kutta-Fehlberg was slowest.
+\item In terms of accuracy, RK4 as implemented by GSL was the worst overall at small step size, and the worst out of the GSL options at all step sizes.
+\item The RK4 and ``3/8'' RK methods I implemented performed nearly identically in time and in accuracy.
+\end{itemize}
+\end{frame}
+
 \subsection{Simulation Results}
 \begin{frame}
 \frametitle{Simulation Results}
